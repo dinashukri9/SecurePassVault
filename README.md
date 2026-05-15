@@ -24,7 +24,7 @@ A locally-hosted password manager developed as part of my Final Year Project 2 a
 ## Security Testing
 OWASP ZAP automated scan results:
 - Before fixes: 11 alerts
-- After fixes: 9 alerts
+- After fixes: 8 alerts
 - Fixed: Anti-clickjacking header, X-Content-Type-Options, Session cookie flags
 
 ## Developer
