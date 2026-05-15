@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sora', sans-serif; background: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .shell { display: flex; width: 860px; min-height: 520px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+
+        /* ── LEFT ── */
+        .left { flex: 1; background: #ffffff; padding: 3rem 2.75rem; display: flex; flex-direction: column; justify-content: center; }
+
+        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2.25rem; text-decoration: none; }
+        .brand-name { font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
+        .brand-name span { color: #1e3a8a; } /* ← darker blue */
+
+        .form-heading { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+        .form-sub { font-size: 13px; color: #94a3b8; margin-bottom: 2rem; }
+
+        /* Flash messages */
+        .msg-error   { color: #dc2626; font-size: 13px; margin-bottom: 10px; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
+        .msg-success { color: #16a34a; font-size: 13px; margin-bottom: 10px; padding: 8px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+        .msg-timeout { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+
+        /* Lockout box */
+        .lockout-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center; }
+        .lockout-box p { font-size: 13px; color: #dc2626; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .lockout-box p svg { width: 15px; height: 15px; }
+        .lockout-timer { font-size: 36px; font-weight: 700; color: #dc2626; letter-spacing: 3px; font-variant-numeric: tabular-nums; }
+        .lockout-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+        /* Fields */
+        .field { position: relative; margin-bottom: 1rem; }
+
+        .field-icon {
+            position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; width: 16px; height: 16px; pointer-events: none;
+        }
+
+        input[type="email"], input[type="password"], input[type="text"] {
+            width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px;
+            padding: 11px 42px; color: #0f172a; font-size: 14px;
+            font-family: 'Sora', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #f8fafc; outline: none;
+        }
+        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: #fff; }
+        input::placeholder { color: #cbd5e1; }
+        input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+
+        /* Eye toggle — SVG */
+        .eye-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: #94a3b8; padding: 4px;
+            display: flex; align-items: center; transition: color 0.2s;
+        }
+        .eye-btn:hover { color: #64748b; }
+        .eye-btn svg { width: 17px; height: 17px; }
+
+        .form-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
+        .remember { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #64748b; cursor: pointer; }
+        .remember input { width: auto; accent-color: #2563eb; }
+        .forgot-link { font-size: 13px; color: #2563eb; background: none; border: none; cursor: pointer; font-family: 'Sora', sans-serif; text-decoration: none; }
+        .forgot-link:hover { color: #1d4ed8; text-decoration: underline; }
+
+        /* Button — navy blue */
+        .btn-primary {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: #1d4ed8;
+            color: #fff; font-size: 14px; font-weight: 600;
+            font-family: 'Sora', sans-serif; cursor: pointer;
+            margin-bottom: 1.2rem;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover { background: #1e40af; box-shadow: 0 4px 15px rgba(29,78,216,0.35); }
+        .btn-primary:active { transform: scale(0.99); }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+        .divider { display: flex; align-items: center; gap: 10px; margin-bottom: 1.2rem; }
+        .divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+        .divider span { font-size: 12px; color: #cbd5e1; }
+        .register-row { text-align: center; font-size: 13px; color: #64748b; }
+        .register-row a { color: #2563eb; text-decoration: none; font-weight: 500; }
+        .register-row a:hover { text-decoration: underline; }
+
+        /* ── RIGHT ── */
+        .right { width: 340px; flex-shrink: 0; background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 55%, #0f172a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem 2rem; position: relative; overflow: hidden; }
+        .right-bg { position: absolute; inset: 0; pointer-events: none; }
+        .right-title { color: #f1f5f9; font-size: 16px; font-weight: 700; text-align: center; margin-top: 1.5rem; letter-spacing: -0.3px; }
+        .right-sub { color: #64748b; font-size: 12px; text-align: center; margin-top: 8px; line-height: 1.7; }
+        .security-badges { display: flex; gap: 18px; margin-top: 1.75rem; }
+        .badge-item { text-align: center; }
+        .badge-val { font-size: 17px; font-weight: 700; }
+        .badge-val.blue { color: #38bdf8; }
+        .badge-val.indigo { color: #818cf8; }
+        .badge-sep { width: 1px; background: rgba(255,255,255,0.07); }
+        .badge-lbl { font-size: 10px; color: #475569; margin-top: 3px; }
+        .float { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        .orbit { animation: orbit 12s linear infinite; transform-origin: 100px 130px; }
+        @keyframes orbit { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        .pulse-ring { animation: pulse 3s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:0.12} 50%{opacity:0.28} }
+
+        @media (max-width: 640px) { .shell { flex-direction: column; width: 95vw; } .right { width: 100%; min-height: 220px; } }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <div class="left">
+
+        <!-- Logo — bigger (44px) + darker Vault -->
+        <a href="/" class="brand">
+            <svg width="44" height="44" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+              <polygon points="100,16 172,59 172,141 100,184 28,141 28,59" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="6 4"/>
+              <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+              <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+              <circle cx="100" cy="5" r="4" fill="#38bdf8"/><circle cx="183" cy="52" r="4" fill="#38bdf8"/>
+              <circle cx="183" cy="148" r="4" fill="#38bdf8"/><circle cx="100" cy="195" r="4" fill="#38bdf8"/>
+              <circle cx="17" cy="148" r="4" fill="#38bdf8"/><circle cx="17" cy="52" r="4" fill="#38bdf8"/>
+              <line x1="100" y1="5" x2="100" y2="28" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="183" y1="52" x2="162" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="183" y1="148" x2="162" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="100" y1="195" x2="100" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="148" x2="38" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="52" x2="38" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="100" x2="38" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+              <line x1="162" y1="100" x2="183" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+              <circle cx="17" cy="100" r="2.5" fill="#60a5fa"/><circle cx="183" cy="100" r="2.5" fill="#60a5fa"/>
+              <circle cx="100" cy="90" r="38" fill="none" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 5"/>
+              <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+              <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+              <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+              <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+              <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+              <path d="M76 118 Q100 134 124 118" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M81 124 Q100 137 119 124" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M86 129 Q100 139 114 129" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+              <path d="M91 133 Q100 140 109 133" stroke="#c7d2fe" stroke-width="1" stroke-linecap="round" fill="none"/>
+            </svg>
+            <div class="brand-name">Secure<span>Vault</span></div>
+        </a>
+
+        <div class="form-heading">Welcome back</div>
+        <div class="form-sub">Sign in to access your encrypted vault</div>
+
+        {% if timeout_msg %}
+            <div class="msg-timeout">⏱ {{ timeout_msg }}</div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(category_filter=["auth_error", "auth_success"], with_categories=true) %}
+            {% for category, msg in messages %}
+                <p class="{{ 'msg-success' if category == 'auth_success' else 'msg-error' }}">{{ msg }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        {% if lockout_remaining > 0 %}
+        <div class="lockout-box">
+            <p>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Account temporarily locked
+            </p>
+            <div class="lockout-timer" id="lockoutTimer">--:--</div>
+            <div class="lockout-hint">Too many failed attempts. Please wait.</div>
+        </div>
+        {% endif %}
+
+        <form method="POST" id="loginForm">
+
+            <!-- Email -->
+            <div class="field">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m2 7 10 7 10-7"/>
+                </svg>
+                <input type="email" id="emailInput" name="email" placeholder="Email address"
+                       {% if lockout_remaining > 0 %}disabled{% endif %} required>
+            </div>
+
+            <!-- Password -->
+            <div class="field">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input type="password" id="password" name="password" placeholder="Master password"
+                       autocomplete="current-password"
+                       {% if lockout_remaining > 0 %}disabled{% endif %} required>
+                <button type="button" class="eye-btn" onclick="togglePassword()" aria-label="Toggle password">
+                    <svg id="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg id="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="form-row">
+                <label class="remember">
+                    <input type="checkbox" id="rememberMe"> Remember me
+                </label>
+                <a href="/forgot-password" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-primary"
+                    {% if lockout_remaining > 0 %}disabled{% endif %}>
+                {% if lockout_remaining > 0 %}Locked{% else %}Login to Vault →{% endif %}
+            </button>
+        </form>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <span>or</span>
+            <div class="divider-line"></div>
+        </div>
+        <div class="register-row">
+            Don't have an account? <a href="/register">Create one free</a>
+        </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="right">
+        <svg class="right-bg" viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="170" cy="260" r="150" fill="none" stroke="rgba(56,189,248,0.06)" stroke-width="1"/>
+            <circle cx="170" cy="260" r="110" fill="none" stroke="rgba(56,189,248,0.05)" stroke-width="1"/>
+            <circle class="pulse-ring" cx="170" cy="260" r="72" fill="none" stroke="rgba(56,189,248,0.22)" stroke-width="1"/>
+            <circle cx="50" cy="80" r="3" fill="rgba(56,189,248,0.18)"/>
+            <circle cx="295" cy="110" r="2" fill="rgba(129,140,248,0.25)"/>
+            <circle cx="315" cy="400" r="3" fill="rgba(56,189,248,0.12)"/>
+            <circle cx="28" cy="430" r="2" fill="rgba(129,140,248,0.18)"/>
+        </svg>
+        <svg class="float" width="190" height="215" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="vg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient>
+                <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+            </defs>
+            <rect x="28" y="62" width="144" height="132" rx="18" fill="url(#bg)" stroke="rgba(56,189,248,0.38)" stroke-width="1.5"/>
+            <rect x="46" y="80" width="108" height="96" rx="10" fill="rgba(56,189,248,0.06)" stroke="rgba(56,189,248,0.18)" stroke-width="1"/>
+            <circle cx="100" cy="128" r="24" fill="url(#vg)" opacity="0.88"/>
+            <circle cx="100" cy="128" r="16" fill="#0f172a"/>
+            <circle cx="100" cy="128" r="6" fill="url(#vg)"/>
+            <line x1="100" y1="112" x2="100" y2="104" stroke="rgba(56,189,248,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="100" y1="144" x2="100" y2="152" stroke="rgba(56,189,248,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="84" y1="128" x2="76" y2="128" stroke="rgba(56,189,248,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="116" y1="128" x2="124" y2="128" stroke="rgba(56,189,248,0.5)" stroke-width="2" stroke-linecap="round"/>
+            <rect x="53" y="158" width="18" height="9" rx="2" fill="rgba(56,189,248,0.28)"/>
+            <rect x="77" y="158" width="18" height="9" rx="2" fill="rgba(129,140,248,0.28)"/>
+            <rect x="101" y="158" width="18" height="9" rx="2" fill="rgba(56,189,248,0.28)"/>
+            <rect x="125" y="158" width="18" height="9" rx="2" fill="rgba(129,140,248,0.2)"/>
+            <path d="M68 44 C68 24 132 24 132 44 L132 67 L68 67 Z" fill="url(#vg)" opacity="0.82"/>
+            <rect x="84" y="55" width="32" height="30" rx="6" fill="#0f172a"/>
+            <circle cx="100" cy="67" r="5.5" fill="url(#vg)"/>
+            <rect x="97.5" y="67" width="5" height="9" rx="2.5" fill="url(#vg)"/>
+            <g class="orbit">
+                <circle cx="100" cy="100" r="2.5" fill="rgba(56,189,248,0.65)"/>
+                <circle cx="100" cy="156" r="2.5" fill="rgba(56,189,248,0.65)"/>
+                <circle cx="70" cy="112" r="2" fill="rgba(129,140,248,0.6)"/>
+                <circle cx="130" cy="144" r="2" fill="rgba(129,140,248,0.6)"/>
+            </g>
+        </svg>
+        <div class="right-title">Zero-Knowledge Encryption</div>
+        <div class="right-sub">Your passwords are encrypted locally<br>before leaving your device.<br>Only you hold the key.</div>
+        <div class="security-badges">
+            <div class="badge-item"><div class="badge-val blue">AES</div><div class="badge-lbl">256-bit</div></div>
+            <div class="badge-sep"></div>
+            <div class="badge-item"><div class="badge-val indigo">2FA</div><div class="badge-lbl">Protected</div></div>
+            <div class="badge-sep"></div>
+            <div class="badge-item"><div class="badge-val blue">E2E</div><div class="badge-lbl">Encrypted</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const EMAIL_COOKIE = 'sv_remembered_email';
+function getCookie(name) { const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)')); return match ? decodeURIComponent(match[2]) : null; }
+function setCookie(name, value, days) { const expires = new Date(Date.now() + days * 864e5).toUTCString(); document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`; }
+function deleteCookie(name) { document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`; }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = getCookie(EMAIL_COOKIE);
+    if (saved) { document.getElementById('emailInput').value = saved; document.getElementById('rememberMe').checked = true; }
+});
+
+document.getElementById('loginForm').addEventListener('submit', () => {
+    const email = document.getElementById('emailInput').value;
+    const remember = document.getElementById('rememberMe').checked;
+    if (remember && email) { setCookie(EMAIL_COOKIE, email, 30); } else { deleteCookie(EMAIL_COOKIE); }
+});
+
+{% if lockout_remaining > 0 %}
+let seconds = {{ lockout_remaining }};
+const timerEl = document.getElementById("lockoutTimer");
+function formatTime(s) { const m = Math.floor(s/60); const sec = s%60; return `${m}:${sec.toString().padStart(2,'0')}`; }
+timerEl.textContent = formatTime(seconds);
+const interval = setInterval(() => { seconds--; if (seconds <= 0) { clearInterval(interval); window.location.reload(); } else { timerEl.textContent = formatTime(seconds); } }, 1000);
+{% endif %}
+
+function togglePassword() {
+    const input = document.getElementById("password");
+    const isPassword = input.type === "password";
+    input.type = isPassword ? "text" : "password";
+    document.getElementById("eye-show").style.display = isPassword ? "none" : "";
+    document.getElementById("eye-hide").style.display = isPassword ? ""     : "none";
+}
+</script>
+</body>
+</html>

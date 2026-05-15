@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Questions - SecureVault</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 340px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        h2 { margin-top: 0; margin-bottom: 5px; }
+        p.subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+        .question-group {
+            background: #f9f9ff;
+            border: 1px solid #e0e0f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .question-box {
+            background: #ede8f5;
+            border-left: 4px solid #764ba2;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 9px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+        a { display: block; margin-top: 12px; font-size: 13px; color: #667eea; text-align: center; }
+        .msg-error { color: red; font-size: 13px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>❓ Security Questions</h2>
+    <p class="subtitle">Answer all 3 questions to reset your password.</p>
+
+    {% with messages = get_flashed_messages(category_filter=["auth_error"], with_categories=true) %}
+        {% for category, msg in messages %}
+            <p class="msg-error">{{ msg }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="question-group">
+            <div class="question-box">{{ user.security_question_1 }}</div>
+            <input type="text" name="answer_1" placeholder="Your answer" required autocomplete="off">
+        </div>
+
+        <div class="question-group">
+            <div class="question-box">{{ user.security_question_2 }}</div>
+            <input type="text" name="answer_2" placeholder="Your answer" required autocomplete="off">
+        </div>
+
+        <div class="question-group">
+            <div class="question-box">{{ user.security_question_3 }}</div>
+            <input type="text" name="answer_3" placeholder="Your answer" required autocomplete="off">
+        </div>
+
+        <button type="submit">Verify Answers</button>
+    </form>
+
+    <a href="/forgot-password">← Try another method</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Biometric Verification - SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Sora', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+            position: relative; overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%; max-width: 400px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            text-align: center;
+            position: relative; z-index: 1;
+        }
+
+        /* Logo */
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            justify-content: center; margin-bottom: 2rem;
+            text-decoration: none;
+        }
+        .brand-name { font-size: 17px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px; }
+        .brand-name span { color: #3b82f6; }
+
+        /* Recovery steps indicator */
+        .recovery-steps {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 1.75rem;
+        }
+        .rs-step {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 600;
+        }
+        .rs-dot {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700;
+        }
+        .rs-dot.active { background: #1d4ed8; color: #fff; }
+        .rs-dot.pending { background: #e2e8f0; color: #94a3b8; }
+        .rs-dot.done { background: #22c55e; color: #fff; }
+        .rs-label { color: #64748b; }
+        .rs-label.active { color: #1d4ed8; }
+        .rs-connector { width: 24px; height: 2px; background: #e2e8f0; border-radius: 1px; }
+
+        /* Fingerprint scanner */
+        .scanner-wrap { position: relative; width: 140px; height: 140px; margin: 0 auto 1.75rem; }
+        .scanner-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 3px solid #e2e8f0;
+            transition: border-color 0.4s;
+        }
+        .scanner-ring.scanning { border-color: #38bdf8; animation: ring-pulse 1.2s ease-in-out infinite; }
+        .scanner-ring.success  { border-color: #22c55e; }
+        .scanner-ring.failed   { border-color: #ef4444; }
+        @keyframes ring-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:0.7} }
+        .scanner-inner {
+            position: absolute; inset: 12px; border-radius: 50%;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.4s;
+        }
+        .scanner-inner.scanning { background: linear-gradient(135deg, #eff6ff, #eef2ff); }
+        .scanner-inner.success  { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+        .scanner-inner.failed   { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+        .fp-icon { width: 64px; height: 64px; transition: all 0.4s; }
+        .fp-lines { stroke: #94a3b8; transition: stroke 0.4s; }
+        .scanning .fp-lines { stroke: #38bdf8; }
+        .success  .fp-lines { stroke: #22c55e; }
+        .failed   .fp-lines { stroke: #ef4444; }
+        .scan-line {
+            position: absolute; left: 12px; right: 12px; height: 2px;
+            background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+            border-radius: 2px; top: 50%; opacity: 0; animation: none;
+        }
+        .scan-line.active { opacity: 1; animation: scan 1.5s ease-in-out infinite; }
+        @keyframes scan { 0%{top:15%} 100%{top:85%} }
+
+        .page-title { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px; }
+        .page-sub   { font-size: 13px; color: #94a3b8; margin-bottom: 1.75rem; line-height: 1.6; }
+
+        .status-text { font-size: 14px; font-weight: 500; min-height: 22px; margin-bottom: 1.5rem; transition: color 0.3s; color: #64748b; }
+        .status-text.scanning { color: #2563eb; }
+        .status-text.success  { color: #16a34a; }
+        .status-text.failed   { color: #dc2626; }
+
+        .progress-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 1.75rem; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; transition: background 0.3s; }
+        .dot.active  { background: #38bdf8; }
+        .dot.done    { background: #22c55e; }
+        .dot.current { background: #38bdf8; animation: dot-pulse 0.8s ease-in-out infinite; }
+        @keyframes dot-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .device-info {
+            display: flex; align-items: center; gap: 10px;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 1.5rem; text-align: left;
+        }
+        .device-icon { color: #64748b; flex-shrink: 0; }
+        .device-icon svg { width: 22px; height: 22px; }
+        .device-text { font-size: 12px; color: #64748b; }
+        .device-text strong { color: #0f172a; display: block; font-size: 13px; margin-bottom: 1px; }
+
+        .success-badge {
+            display: none;
+            background: #f0fdf4; border: 1px solid #bbf7d0;
+            border-radius: 12px; padding: 12px;
+            margin-bottom: 1.25rem;
+            font-size: 13px; color: #16a34a; font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: #1d4ed8;
+            color: #fff; font-size: 14px; font-weight: 600;
+            font-family: 'Sora', sans-serif; cursor: pointer;
+            margin-bottom: 12px; transition: background 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #1e40af; box-shadow: 0 4px 15px rgba(29,78,216,0.35); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+        .btn-primary svg { width: 16px; height: 16px; }
+
+        .back-link { font-size: 13px; color: #94a3b8; text-decoration: none; display: block; transition: color 0.2s; }
+        .back-link:hover { color: #2563eb; }
+    </style>
+</head>
+<body>
+<div class="card">
+
+    <!-- Logo -->
+    <a href="/login" class="brand">
+        <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+          <polygon points="100,16 172,59 172,141 100,184 28,141 28,59" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="6 4"/>
+          <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+          <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+          <circle cx="100" cy="5" r="4" fill="#38bdf8"/><circle cx="183" cy="52" r="4" fill="#38bdf8"/>
+          <circle cx="183" cy="148" r="4" fill="#38bdf8"/><circle cx="100" cy="195" r="4" fill="#38bdf8"/>
+          <circle cx="17" cy="148" r="4" fill="#38bdf8"/><circle cx="17" cy="52" r="4" fill="#38bdf8"/>
+          <line x1="100" y1="5" x2="100" y2="28" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="52" x2="162" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="148" x2="162" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="100" y1="195" x2="100" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="148" x2="38" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="52" x2="38" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="100" x2="38" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <line x1="162" y1="100" x2="183" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <circle cx="17" cy="100" r="2.5" fill="#60a5fa"/><circle cx="183" cy="100" r="2.5" fill="#60a5fa"/>
+          <circle cx="100" cy="90" r="38" fill="none" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 5"/>
+          <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+          <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+          <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+          <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+          <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+          <path d="M76 118 Q100 134 124 118" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M81 124 Q100 137 119 124" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M86 129 Q100 139 114 129" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M91 133 Q100 140 109 133" stroke="#c7d2fe" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="brand-name">Secure<span>Vault</span></span>
+    </a>
+
+    <!-- Recovery step indicator: Step 1 of 2 active -->
+    <div class="recovery-steps">
+        <div class="rs-step">
+            <div class="rs-dot active">1</div>
+            <span class="rs-label active">Biometric</span>
+        </div>
+        <div class="rs-connector"></div>
+        <div class="rs-step">
+            <div class="rs-dot pending">2</div>
+            <span class="rs-label">Authenticator</span>
+        </div>
+        <div class="rs-connector"></div>
+        <div class="rs-step">
+            <div class="rs-dot pending">3</div>
+            <span class="rs-label">Reset</span>
+        </div>
+    </div>
+
+    <!-- Scanner -->
+    <div class="scanner-wrap" id="scannerWrap">
+        <div class="scanner-ring" id="scannerRing"></div>
+        <div class="scanner-inner" id="scannerInner">
+            <svg class="fp-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="fpLines">
+                    <path class="fp-lines" d="M32 8C19.85 8 10 17.85 10 30" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M54 30C54 17.85 44.15 8 32 8" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M16 30c0-8.84 7.16-16 16-16s16 7.16 16 16" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M32 20c-5.52 0-10 4.48-10 10v4" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M42 30v2c0 5.52-4.48 10-10 10" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M22 34c0 5.52 4.48 10 10 10 2.76 0 5.26-1.12 7.07-2.93" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M32 26v8" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M26 44c1.7 3.6 5.38 6 9.6 6 5.9 0 10.68-4.8 10.68-10.72V36" stroke-width="2.5" stroke-linecap="round"/>
+                    <path class="fp-lines" d="M14 38c.9 7.2 6.96 12.8 14.3 13.8" stroke-width="2.5" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+        <div class="scan-line" id="scanLine"></div>
+    </div>
+
+    <div class="page-title">Biometric Verification</div>
+    <div class="page-sub">Use your device fingerprint to verify your identity and recover your account.</div>
+
+    <div class="device-info">
+        <div class="device-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path d="M8 21h8M12 17v4"/>
+            </svg>
+        </div>
+        <div class="device-text">
+            <strong>MacBook — Touch ID</strong>
+            Registered device fingerprint
+        </div>
+    </div>
+
+    <div class="progress-dots">
+        <div class="dot" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
+        <div class="dot" id="d4"></div>
+        <div class="dot" id="d5"></div>
+    </div>
+
+    <div class="status-text" id="statusText">Place your finger on the Touch ID sensor</div>
+
+    <div class="success-badge" id="successBadge">
+        ✅ Fingerprint verified! Redirecting to authenticator confirmation...
+    </div>
+
+    <button class="btn-primary" id="scanBtn" onclick="startScan()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Verify with Touch ID
+    </button>
+    <a href="/account-locked" class="back-link">← Back</a>
+</div>
+
+<script>
+let scanning = false;
+function startScan() {
+    if (scanning) return;
+    scanning = true;
+    const btn        = document.getElementById('scanBtn');
+    const ring       = document.getElementById('scannerRing');
+    const inner      = document.getElementById('scannerInner');
+    const scanLine   = document.getElementById('scanLine');
+    const statusText = document.getElementById('statusText');
+    const dots       = [1,2,3,4,5].map(i => document.getElementById('d'+i));
+
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Scanning...';
+
+    ring.className  = 'scanner-ring scanning';
+    inner.className = 'scanner-inner scanning';
+    scanLine.classList.add('active');
+    statusText.className   = 'status-text scanning';
+    statusText.textContent = 'Scanning fingerprint...';
+
+    let dotIndex = 0;
+    const dotInterval = setInterval(() => {
+        if (dotIndex < dots.length) {
+            if (dotIndex > 0) dots[dotIndex-1].className = 'dot done';
+            dots[dotIndex].className = 'dot current';
+            dotIndex++;
+        }
+    }, 400);
+
+    setTimeout(() => {
+        clearInterval(dotInterval);
+        dots.forEach(d => d.className = 'dot done');
+        ring.className  = 'scanner-ring success';
+        inner.className = 'scanner-inner success';
+        scanLine.classList.remove('active');
+        statusText.className   = 'status-text success';
+        statusText.textContent = '✅ Fingerprint verified!';
+        document.getElementById('successBadge').style.display = 'block';
+        btn.innerHTML = '✅ Verified';
+
+        setTimeout(() => {
+            window.location.href = '/verify-biometric-2fa';
+        }, 2000);
+    }, 2500);
+}
+</script>
+</body>
+</html>

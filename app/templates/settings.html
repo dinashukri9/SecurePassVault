@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings - SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sora', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); min-height: 100vh; }
+        .navbar { background: rgba(15,23,42,0.95); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .brand { display: flex; align-items: center; gap: 9px; }
+        .brand-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #38bdf8, #818cf8); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+        .brand-name { font-size: 17px; font-weight: 600; color: #f1f5f9; }
+        .brand-name span { color: #38bdf8; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .nav-link { color: #94a3b8; font-size: 13px; text-decoration: none; padding: 5px 10px; border-radius: 8px; transition: background 0.2s, color 0.2s; }
+        .nav-link:hover { background: rgba(255,255,255,0.06); color: #f1f5f9; }
+        .nav-link.logout { color: #f87171; }
+        .nav-link.logout:hover { background: rgba(239,68,68,0.1); }
+        .main { max-width: 640px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+        .page-header { margin-bottom: 1.75rem; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #64748b; font-size: 13px; text-decoration: none; margin-bottom: 1rem; transition: color 0.2s; }
+        .back-link:hover { color: #38bdf8; }
+        .page-title { font-size: 21px; font-weight: 600; color: #f1f5f9; }
+        .page-sub { font-size: 13px; color: #475569; margin-top: 3px; }
+
+        /* Accordion */
+        .accordion { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
+        .accordion.open { border-color: rgba(56,189,248,0.25); }
+        .accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1.25rem; cursor: pointer; transition: background 0.2s; user-select: none; }
+        .accordion-header:hover { background: rgba(255,255,255,0.03); }
+        .accordion-left { display: flex; align-items: center; gap: 12px; }
+        .accordion-icon { font-size: 18px; width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .accordion-title { font-size: 14px; font-weight: 600; color: #f1f5f9; }
+        .accordion-sub { font-size: 12px; color: #475569; margin-top: 2px; }
+        .acc-right { display: flex; align-items: center; gap: 10px; }
+        .acc-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+        .acc-badge.green { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+        .acc-badge.blue  { background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
+        .acc-badge.gray  { background: rgba(148,163,184,0.1); color: #64748b; border: 1px solid rgba(148,163,184,0.15); }
+        .acc-badge.red   { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+        .chevron { color: #475569; font-size: 11px; transition: transform 0.3s; }
+        .accordion.open .chevron { transform: rotate(180deg); }
+        .accordion-body { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); }
+        .accordion.open .accordion-body { display: block; padding-top: 1.1rem; }
+
+        /* Inline messages */
+        .inline-success { color: #4ade80; font-size: 13px; margin-bottom: 12px; padding: 9px 13px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; display: flex; align-items: center; gap: 8px; }
+        .inline-error   { color: #f87171; font-size: 13px; margin-bottom: 12px; padding: 9px 13px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* Info callouts */
+        .info-callout { display: flex; align-items: flex-start; gap: 10px; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.12); border-radius: 10px; padding: 10px 14px; margin-bottom: 1.1rem; }
+        .info-callout-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+        .info-callout p { font-size: 12px; color: #64748b; line-height: 1.6; }
+        .info-callout p strong { color: #94a3b8; }
+        .warn-callout { display: flex; align-items: flex-start; gap: 10px; background: rgba(251,191,36,0.05); border: 1px solid rgba(251,191,36,0.15); border-radius: 10px; padding: 10px 14px; margin-bottom: 1.1rem; }
+        .warn-callout p { font-size: 12px; color: #92400e; line-height: 1.6; }
+
+        /* Current value */
+        .current-val { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+        .current-val-label { font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.07em; }
+        .current-val-value { font-size: 13px; color: #94a3b8; font-weight: 500; }
+
+        /* Fields */
+        .field-group { margin-bottom: 1rem; }
+        .field-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 5px; }
+        .field-wrap { position: relative; }
+        .field-input { width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 42px 10px 14px; color: #f1f5f9; font-size: 14px; font-family: 'Sora', sans-serif; transition: border-color 0.2s; }
+        .field-input:focus { outline: none; border-color: #2563eb; }
+        .field-input::placeholder { color: #334155; }
+        .field-input.match-ok    { border-color: rgba(34,197,94,0.5); }
+        .field-input.match-error { border-color: rgba(239,68,68,0.5); }
+        .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: #475569; padding: 2px; }
+        .eye-btn:hover { color: #94a3b8; }
+
+        /* Email match */
+        .email-match-msg { font-size: 12px; margin-top: 4px; min-height: 16px; }
+        .email-match-msg.ok    { color: #4ade80; }
+        .email-match-msg.error { color: #f87171; }
+
+        /* Strength */
+        .strength-bar-bg { height: 3px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+        .strength-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s, background 0.3s; width: 0%; }
+        .strength-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; margin-bottom: 4px; }
+        .strength-text { font-size: 11px; color: #475569; }
+        .validation-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px; }
+        .vcheck { font-size: 11px; display: flex; align-items: center; gap: 3px; }
+        .vcheck.pass { color: #4ade80; }
+        .vcheck.fail { color: #334155; }
+        .match-msg { font-size: 12px; margin-top: 4px; min-height: 16px; }
+        .match-msg.ok    { color: #4ade80; }
+        .match-msg.error { color: #f87171; }
+
+        /* Timeout */
+        .options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem; }
+        .options label { flex: 1; min-width: 70px; text-align: center; }
+        .options input[type="radio"] { display: none; }
+        .options input[type="radio"] + span { display: block; padding: 10px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; font-size: 13px; color: #64748b; transition: all 0.2s; background: rgba(255,255,255,0.03); }
+        .options input[type="radio"] + span:hover { border-color: #38bdf8; color: #38bdf8; }
+        .options input[type="radio"]:checked + span { border-color: #38bdf8; background: rgba(56,189,248,0.1); color: #38bdf8; font-weight: 600; }
+
+        /* Last login */
+        .last-login-box { background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.12); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #64748b; }
+        .last-login-box strong { color: #38bdf8; }
+
+        /* Biometric */
+        .bio-device { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 16px; margin-bottom: 1rem; }
+        .bio-device-icon { font-size: 26px; flex-shrink: 0; }
+        .bio-device-info { flex: 1; }
+        .bio-device-info strong { font-size: 13px; color: #f1f5f9; display: block; }
+        .bio-device-info span { font-size: 12px; color: #64748b; }
+
+        .finger-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+        .finger-slot { background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 12px; text-align: center; transition: border-color 0.2s; }
+        .finger-slot.registered { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+        .finger-slot.optional   { border-color: rgba(56,189,248,0.15); background: rgba(56,189,248,0.03); }
+        .finger-slot.inactive   { opacity: 0.4; }
+        .finger-slot-icon { font-size: 26px; margin-bottom: 6px; }
+        .finger-slot-name { font-size: 13px; font-weight: 600; color: #f1f5f9; margin-bottom: 3px; }
+        .finger-slot-status { font-size: 11px; color: #64748b; }
+        .finger-slot.registered .finger-slot-status { color: #4ade80; }
+        .finger-slot-tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-top: 4px; }
+        .finger-slot-tag.req { color: #38bdf8; background: rgba(56,189,248,0.1); }
+        .finger-slot-tag.opt { color: #64748b; background: rgba(148,163,184,0.1); }
+
+        /* Buttons */
+        .btn-primary { width: 100%; padding: 11px; border-radius: 10px; border: none; background: linear-gradient(135deg, #2563eb, #182c65); color: #fff; font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; cursor: pointer; transition: opacity 0.2s; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-success { width: 100%; padding: 11px; border-radius: 10px; border: none; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; cursor: pointer; transition: opacity 0.2s; }
+        .btn-success:hover { opacity: 0.9; }
+        .btn-danger { width: 100%; padding: 11px; border-radius: 10px; border: 1.5px solid rgba(239,68,68,0.4); background: transparent; color: #f87171; font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; cursor: pointer; transition: background 0.2s; }
+        .btn-danger:hover { background: rgba(239,68,68,0.08); }
+        .btn-outline { width: 100%; padding: 11px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.1); background: transparent; color: #94a3b8; font-size: 14px; font-weight: 500; font-family: 'Sora', sans-serif; cursor: pointer; transition: all 0.2s; }
+        .btn-outline:hover { border-color: #f87171; color: #f87171; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem 1.75rem; width: 360px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 17px; font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+        .modal-sub { font-size: 12px; color: #64748b; margin-bottom: 1.5rem; line-height: 1.6; }
+
+        /* Scanner */
+        .scanner-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto 1.25rem; }
+        .scanner-ring { position: absolute; inset: 0; border-radius: 50%; border: 2.5px solid #334155; transition: border-color 0.4s, box-shadow 0.4s; animation: ring-idle 2s ease-in-out infinite; }
+        .scanner-ring.scanning { border-color: #38bdf8; box-shadow: 0 0 22px rgba(56,189,248,0.35); animation: ring-scan 0.8s ease-in-out infinite; }
+        .scanner-ring.success  { border-color: #22c55e; box-shadow: 0 0 22px rgba(34,197,94,0.35); animation: none; }
+        @keyframes ring-idle { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes ring-scan { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+        .scanner-inner { position: absolute; inset: 10px; border-radius: 50%; background: #0f172a; display: flex; align-items: center; justify-content: center; transition: background 0.4s; }
+        .scanner-inner.scanning { background: radial-gradient(circle, #1e3a5f, #0f172a); }
+        .scanner-inner.success  { background: radial-gradient(circle, #14532d, #0f172a); }
+        .fp-svg { width: 54px; height: 54px; }
+        .fp-path { fill: none; stroke: #334155; stroke-width: 2; stroke-linecap: round; transition: stroke 0.4s; }
+        .scanning .fp-path { stroke: #38bdf8; }
+        .success  .fp-path  { stroke: #22c55e; }
+        .scan-line { position: absolute; left: 10px; right: 10px; height: 2px; background: linear-gradient(90deg, transparent, #38bdf8 50%, transparent); border-radius: 2px; opacity: 0; top: 50%; }
+        .scan-line.active { opacity: 1; animation: scanline 1.2s ease-in-out infinite; }
+        @keyframes scanline { 0%{top:12%} 100%{top:88%} }
+
+        /* Finger progress */
+        .finger-progress { display: flex; justify-content: center; gap: 14px; margin-bottom: 1.1rem; }
+        .fp-indicator { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .fp-dot { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.3s; }
+        .fp-dot.active { border-color: #38bdf8; background: rgba(56,189,248,0.1); animation: dot-pulse 1s ease-in-out infinite; }
+        .fp-dot.done   { border-color: #22c55e; background: rgba(34,197,94,0.1); animation: none; }
+        @keyframes dot-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        .fp-label { font-size: 10px; color: #475569; }
+        .fp-label.active { color: #38bdf8; }
+        .fp-label.done   { color: #4ade80; }
+
+        /* Steps */
+        .bio-steps { display: flex; flex-direction: column; gap: 7px; margin-bottom: 1.25rem; text-align: left; }
+        .bio-step { display: flex; align-items: center; gap: 9px; font-size: 12px; color: #475569; transition: color 0.3s; }
+        .bio-step.active { color: #38bdf8; }
+        .bio-step.done   { color: #4ade80; }
+        .step-dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; transition: all 0.3s; }
+        .bio-step.active .step-dot { border-color: #38bdf8; color: #38bdf8; background: rgba(56,189,248,0.1); }
+        .bio-step.done   .step-dot { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.1); }
+
+        .modal-status { font-size: 13px; font-weight: 500; color: #64748b; min-height: 20px; margin-bottom: 1rem; transition: color 0.3s; line-height: 1.5; }
+        .modal-status.scanning { color: #38bdf8; }
+        .modal-status.success  { color: #4ade80; }
+
+        /* Finger choice */
+        .finger-choice { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+        .choice-btn { flex: 1; padding: 12px 10px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #94a3b8; font-family: 'Sora', sans-serif; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .choice-btn:hover, .choice-btn.selected { border-color: #38bdf8; background: rgba(56,189,248,0.08); color: #38bdf8; }
+        .choice-icon { font-size: 22px; margin-bottom: 5px; }
+        .choice-label { font-size: 13px; font-weight: 600; display: block; }
+        .choice-sub { font-size: 10px; color: #475569; margin-top: 2px; display: block; }
+        .choice-btn.selected .choice-sub { color: #38bdf8; }
+
+        .btn-modal-action { width: 100%; padding: 11px; border-radius: 10px; border: none; background: linear-gradient(135deg, #2563eb, #182c65); color: #fff; font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; cursor: pointer; margin-bottom: 8px; }
+        .btn-modal-cancel { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #64748b; font-size: 13px; font-family: 'Sora', sans-serif; cursor: pointer; }
+        .btn-modal-cancel:hover { background: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+
+<!-- Register Biometric Modal -->
+<div class="modal-overlay" id="registerModal">
+    <div class="modal-box">
+        <div id="bioStep1">
+            <div class="modal-title">👆 Register Biometric</div>
+            <div class="modal-sub">Choose how many fingers to register for account recovery.</div>
+            <div class="finger-choice">
+                <button class="choice-btn selected" id="choice1" onclick="selectFingers(1)" type="button">
+                    <div class="choice-icon">☝️</div>
+                    <span class="choice-label">1 Finger</span>
+                    <span class="choice-sub">Basic recovery</span>
+                </button>
+                <button class="choice-btn" id="choice2" onclick="selectFingers(2)" type="button">
+                    <div class="choice-icon">✌️</div>
+                    <span class="choice-label">2 Fingers</span>
+                    <span class="choice-sub">Recommended ✓</span>
+                </button>
+            </div>
+            <div class="info-callout" style="text-align:left;margin-bottom:1.25rem;">
+                <span class="info-callout-icon">ℹ️</span>
+                <p>Registering 2 fingers is recommended. If one finger doesn't scan (wet or injured), the other still works. <strong>Your fingerprint never leaves your device</strong> — only a cryptographic reference is stored.</p>
+            </div>
+            <button class="btn-modal-action" onclick="startBioScan()" type="button">Start Registration →</button>
+            <button class="btn-modal-cancel" onclick="closeRegisterModal()" type="button">Cancel</button>
+        </div>
+
+        <div id="bioStep2" style="display:none;">
+            <div class="modal-title" id="scanTitle">Registering Biometric</div>
+            <div class="modal-sub" id="scanSub">Follow the on-screen instructions carefully</div>
+            <div class="scanner-wrap">
+                <div class="scanner-ring" id="scannerRing"></div>
+                <div class="scanner-inner" id="scannerInner">
+                    <svg class="fp-svg" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                        <path class="fp-path" d="M28 6C16.95 6 8 14.95 8 26"/>
+                        <path class="fp-path" d="M48 26C48 14.95 39.05 6 28 6"/>
+                        <path class="fp-path" d="M14 26c0-7.73 6.27-14 14-14s14 6.27 14 14"/>
+                        <path class="fp-path" d="M28 18c-4.42 0-8 3.58-8 8v3"/>
+                        <path class="fp-path" d="M36 26v2c0 4.42-3.58 8-8 8"/>
+                        <path class="fp-path" d="M20 30c0 4.42 3.58 8 8 8 2.21 0 4.21-.9 5.66-2.34"/>
+                        <path class="fp-path" d="M28 22v6"/>
+                        <path class="fp-path" d="M22 38c1.36 2.88 4.3 4.8 7.68 4.8 4.72 0 8.54-3.84 8.54-8.58V34"/>
+                        <path class="fp-path" d="M12 32c.72 5.76 5.57 10.24 11.44 11.04"/>
+                    </svg>
+                </div>
+                <div class="scan-line" id="scanLine"></div>
+            </div>
+            <div class="finger-progress" id="fingerProgress"></div>
+            <div class="bio-steps" id="bioSteps"></div>
+            <div class="modal-status scanning" id="modalStatus">Initializing Touch ID...</div>
+            <form method="POST" id="regForm">
+                <input type="hidden" name="action" value="register_biometric">
+                <input type="hidden" name="fingers" id="fingersInput" value="1">
+            </form>
+            <button class="btn-modal-cancel" id="cancelScanBtn" onclick="closeRegisterModal()" type="button">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Biometric Modal -->
+<div class="modal-overlay" id="removeModal">
+    <div class="modal-box">
+        <div class="modal-title">🗑 Remove Biometric</div>
+        <div class="modal-sub">Verify your fingerprint to confirm removal. This disables biometric recovery.</div>
+        <div class="scanner-wrap">
+            <div class="scanner-ring" id="remRing"></div>
+            <div class="scanner-inner" id="remInner">
+                <svg class="fp-svg" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                    <path class="fp-path" d="M28 6C16.95 6 8 14.95 8 26"/>
+                    <path class="fp-path" d="M48 26C48 14.95 39.05 6 28 6"/>
+                    <path class="fp-path" d="M14 26c0-7.73 6.27-14 14-14s14 6.27 14 14"/>
+                    <path class="fp-path" d="M28 18c-4.42 0-8 3.58-8 8v3"/>
+                    <path class="fp-path" d="M36 26v2c0 4.42-3.58 8-8 8"/>
+                    <path class="fp-path" d="M20 30c0 4.42 3.58 8 8 8 2.21 0 4.21-.9 5.66-2.34"/>
+                    <path class="fp-path" d="M28 22v6"/>
+                </svg>
+            </div>
+            <div class="scan-line" id="remScanLine"></div>
+        </div>
+        <div class="modal-status scanning" id="remStatus">Place your registered finger on Touch ID...</div>
+        <form method="POST" id="remForm"><input type="hidden" name="action" value="remove_biometric"></form>
+        <button class="btn-modal-cancel" onclick="closeRemoveModal()" type="button">Cancel</button>
+    </div>
+</div>
+
+<nav class="navbar">
+<div class="brand">
+    <svg width="34" height="34" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+      <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+      <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+      <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+      <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+      <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+      <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+      <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+    </svg>
+    <div class="brand-name">Secure<span>Vault</span></div>
+</div>
+    <div class="nav-right">
+        <a href="/dashboard" class="nav-link">← Dashboard</a>
+        <a href="/logout" class="nav-link logout">→ Logout</a>
+    </div>
+</nav>
+
+<div class="main">
+    <div class="page-header">
+        <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        <div class="page-title">Settings</div>
+        <div class="page-sub">Manage your account preferences and security</div>
+    </div>
+
+    <!-- Last Login -->
+    <div class="accordion {% if open_section == 'login' %}open{% endif %}" id="acc-login">
+        <div class="accordion-header" onclick="toggleAcc('acc-login')">
+            <div class="accordion-left">
+                <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                <div><div class="accordion-title">Last Login</div><div class="accordion-sub">Account access history</div></div>
+            </div>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="accordion-body">
+            <div class="last-login-box">
+                {% if last_login %}Last login: <strong>{{ last_login.strftime('%d %b %Y, %I:%M %p') }} UTC</strong>
+                {% else %}<span style="color:#334155;">No login recorded yet.</span>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Email -->
+    <div class="accordion {% if open_section == 'email' %}open{% endif %}" id="acc-email">
+        <div class="accordion-header" onclick="toggleAcc('acc-email')">
+            <div class="accordion-left">
+                <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg></div>
+                <div><div class="accordion-title">Change Email</div><div class="accordion-sub">Update your account email</div></div>
+            </div>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="accordion-body">
+            {% with msgs = get_flashed_messages(category_filter=["email_error","email_success"], with_categories=true) %}
+                {% for cat, msg in msgs %}
+                    <div class="{{ 'inline-success' if cat == 'email_success' else 'inline-error' }}">
+                        {{ '✅' if cat == 'email_success' else '❌' }} {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="info-callout">
+                <span class="info-callout-icon">💡</span>
+                <p>Use an email you <strong>always have access to</strong>. It's your main recovery option for password reset and 2FA delivery.</p>
+            </div>
+            <div class="current-val">
+                <span class="current-val-label">Current Email</span>
+                <span class="current-val-value">{{ current_email }}</span>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="change_email">
+                <div class="field-group">
+                    <label class="field-label">New Email Address</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="email" id="newEmail" name="new_email" placeholder="Enter new email" oninput="checkEmailMatch()" required>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Confirm New Email</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="email" id="confEmail" name="confirm_email" placeholder="Re-enter new email" oninput="checkEmailMatch()" required>
+                    </div>
+                    <div class="email-match-msg" id="emailMatchMsg"></div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Master Password</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="password" id="emailMasterPw" name="master_password" placeholder="Confirm with master password" required>
+                        <button type="button" class="eye-btn" onclick="toggleEye('emailMasterPw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                </div>
+                <button class="btn-primary" type="submit">Update Email</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="accordion {% if open_section == 'password' %}open{% endif %}" id="acc-password">
+        <div class="accordion-header" onclick="toggleAcc('acc-password')">
+            <div class="accordion-left">
+               <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div><div class="accordion-title">Change Master Password</div><div class="accordion-sub">Update & re-encrypt your vault</div></div>
+            </div>
+            <span class="chevron">▼</span>
+        </div>
+        <div class="accordion-body">
+            {% with msgs = get_flashed_messages(category_filter=["password_error","password_success"], with_categories=true) %}
+                {% for cat, msg in msgs %}
+                    <div class="{{ 'inline-success' if cat == 'password_success' else 'inline-error' }}">
+                        {{ '✅' if cat == 'password_success' else '❌' }} {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="warn-callout">
+                <span style="font-size:15px;flex-shrink:0;margin-top:1px;">⚠️</span>
+                <p style="color:#92400e;">Changing your master password will <strong>automatically re-encrypt all your saved passwords</strong> with the new key.</p>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="change_password">
+                <div class="field-group">
+                    <label class="field-label">Current Password</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="password" id="curPw" name="current_password" placeholder="Current master password" required>
+                        <button type="button" class="eye-btn" onclick="toggleEye('curPw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">New Password</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="password" id="newPw" name="new_password" placeholder="New master password" oninput="checkNewPw()" required>
+                        <button type="button" class="eye-btn" onclick="toggleEye('newPw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                    <div class="strength-bar-bg"><div class="strength-bar-fill" id="pwStrBar"></div></div>
+                    <div class="strength-row"><span class="strength-text" id="pwStrText"></span></div>
+                    <div class="validation-checks" id="pwChecks"></div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Confirm New Password</label>
+                    <div class="field-wrap">
+                        <input class="field-input" type="password" id="confPw" name="confirm_password" placeholder="Confirm new password" oninput="checkConfirm()" required>
+                        <button type="button" class="eye-btn" onclick="toggleEye('confPw')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                    <div class="match-msg" id="matchMsg"></div>
+                </div>
+                <button class="btn-primary" type="submit">Update Password & Re-encrypt Vault</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Session Timeout -->
+    <div class="accordion {% if open_section == 'timeout' %}open{% endif %}" id="acc-timeout">
+        <div class="accordion-header" onclick="toggleAcc('acc-timeout')">
+            <div class="accordion-left">
+                <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                <div><div class="accordion-title">Session Timeout</div><div class="accordion-sub">Auto logout after inactivity</div></div>
+            </div>
+            <div class="acc-right">
+                <span class="acc-badge blue">{{ current_timeout }} min</span>
+                <span class="chevron">▼</span>
+            </div>
+        </div>
+        <div class="accordion-body">
+            {% with msgs = get_flashed_messages(category_filter=["timeout_error","timeout_success"], with_categories=true) %}
+                {% for cat, msg in msgs %}
+                    <div class="{{ 'inline-success' if cat == 'timeout_success' else 'inline-error' }}">
+                        {{ '✅' if cat == 'timeout_success' else '❌' }} {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="info-callout">
+                <span class="info-callout-icon">🛡️</span>
+                <p><strong>Shorter = more secure.</strong> Recommended: 10 min for personal use, 5 min on shared devices. 30 min only in a private environment.</p>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="timeout">
+                <div class="options">
+                    {% for mins in [5, 10, 15, 30] %}
+                    <label>
+                        <input type="radio" name="session_timeout" value="{{ mins }}" {% if current_timeout == mins %}checked{% endif %}>
+                        <span>{{ mins }} min</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <button class="btn-primary" type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+   <!-- 2FA -->
+    <div class="accordion {% if open_section == '2fa' %}open{% endif %}" id="acc-2fa">
+        <div class="accordion-header" onclick="toggleAcc('acc-2fa')">
+            <div class="accordion-left">
+                <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div class="accordion-title">Two-Factor Authentication</div><div class="accordion-sub">Manage your 2FA methods</div></div>
+            </div>
+            <div class="acc-right">
+                {% if totp_enabled and email_2fa_enabled %}
+                    <span class="acc-badge green">Both Active</span>
+                {% elif totp_enabled %}
+                    <span class="acc-badge green">TOTP</span>
+                {% elif email_2fa_enabled %}
+                    <span class="acc-badge blue">Email OTP</span>
+                {% else %}
+                    <span class="acc-badge red">Not set</span>
+                {% endif %}
+                <span class="chevron">▼</span>
+            </div>
+        </div>
+        <div class="accordion-body">
+            {% with msgs = get_flashed_messages(category_filter=["twofa_success","twofa_error"], with_categories=true) %}
+                {% for cat, msg in msgs %}
+                    <div class="{{ 'inline-success' if cat == 'twofa_success' else 'inline-error' }}">
+                        {{ '✅' if cat == 'twofa_success' else '❌' }} {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="info-callout">
+                <span class="info-callout-icon">🛡️</span>
+                <p><strong>Enable multiple methods for maximum security.</strong> If you lose access to one, the other acts as backup. TOTP is recommended — works offline and is phishing-resistant.</p>
+            </div>
+            <!-- TOTP toggle -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="#60a5fa" stroke="none"/><path d="M9 6h6"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:#f1f5f9;">Authenticator App (TOTP)</div>
+                        <div style="font-size:11px;color:#475569;margin-top:2px;">Google Authenticator — works offline, phishing-resistant</div>
+                    </div>
+                </div>
+                <form method="POST" style="flex-shrink:0;">
+                    <input type="hidden" name="action" value="toggle_totp">
+                    {% if totp_enabled %}
+                        <button type="submit" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(239,68,68,0.4);background:transparent;color:#f87171;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;">Disable</button>
+                    {% else %}
+                        <button type="submit" style="padding:6px 14px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;">Enable</button>
+                    {% endif %}
+                </form>
+            </div>
+            <!-- Email OTP toggle -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:38px;height:38px;border-radius:10px;background:rgba(34,197,94,0.1);display:flex;align-items:center;justify-content:center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:#f1f5f9;">Email OTP</div>
+                        <div style="font-size:11px;color:#475569;margin-top:2px;">One-time code sent to your registered email</div>
+                    </div>
+                </div>
+                <form method="POST" style="flex-shrink:0;">
+                    <input type="hidden" name="action" value="toggle_email_2fa">
+                    {% if email_2fa_enabled %}
+                        <button type="submit" style="padding:6px 14px;border-radius:8px;border:1.5px solid rgba(239,68,68,0.4);background:transparent;color:#f87171;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;">Disable</button>
+                    {% else %}
+                        <button type="submit" style="padding:6px 14px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;">Enable</button>
+                    {% endif %}
+                </form>
+            </div>
+            <div style="font-size:11px;color:#334155;text-align:center;margin-top:8px;">At least one method must remain enabled at all times.</div>
+        </div>
+    </div>
+
+    <!-- Biometric -->
+    <div class="accordion {% if open_section == 'bio' %}open{% endif %}" id="acc-bio">
+        <div class="accordion-header" onclick="toggleAcc('acc-bio')">
+            <div class="accordion-left">
+                <div class="accordion-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04.054-.09A13.916 13.916 0 0 0 8 11a4 4 0 1 1 8 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0 0 15.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 0 0 8 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg></div>
+                <div><div class="accordion-title">Biometric Recovery</div><div class="accordion-sub">Touch ID for account recovery</div></div>
+            </div>
+            <div class="acc-right">
+                {% if biometric_registered %}<span class="acc-badge green">✅ Active</span>
+                {% else %}<span class="acc-badge gray">Not set</span>{% endif %}
+                <span class="chevron">▼</span>
+            </div>
+        </div>
+        <div class="accordion-body">
+            {% with msgs = get_flashed_messages(category_filter=["bio_success","bio_error"], with_categories=true) %}
+                {% for cat, msg in msgs %}
+                    <div class="{{ 'inline-success' if cat == 'bio_success' else 'inline-error' }}">
+                        {{ '✅' if cat == 'bio_success' else '❌' }} {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+            <div class="info-callout">
+                <span class="info-callout-icon">
+                   <i class="fa-solid fa-lock"></i>
+                </span>
+                <p>Biometric recovery lets you unlock your account after too many failed reset attempts. <strong>Your fingerprint never leaves your device</strong> — only a cryptographic key reference is stored (WebAuthn/FIDO2 standard).</p>
+            </div>
+            <div class="bio-device">
+                <span class="bio-device-icon">
+                   <i class="fa-solid fa-laptop"></i>
+                </span>
+                <div class="bio-device-info">
+                    <strong>MacBook — Touch ID</strong>
+                    <span>Registered device for biometric recovery</span>
+                </div>
+            </div>
+
+            {% if biometric_registered %}
+                {% set fingers = biometric_fingers if biometric_fingers else 1 %}
+                <div class="finger-slots">
+                    <div class="finger-slot registered">
+                        <div class="finger-slot-icon">
+                            <i class="fa-solid fa-fingerprint"></i>
+</div>
+                        <div class="finger-slot-name">Finger 1</div>
+                        <div class="finger-slot-status">✓ Registered</div>
+                    </div>
+                    <div class="finger-slot {{ 'registered' if fingers >= 2 else 'inactive' }}">
+                        <div class="finger-slot-icon">
+                           <i class="fa-solid fa-fingerprint"></i>
+                       </div>
+                      <div class="finger-slot-name">Finger 2</div>
+                        <div class="finger-slot-status">{{ '✓ Registered' if fingers >= 2 else 'Not registered' }}</div>
+                    </div>
+                </div>
+                <p style="font-size:12px;color:#475569;margin-bottom:1rem;">{{ fingers }} finger(s) registered. Verify your fingerprint to remove biometric.</p>
+                <button class="btn-outline" onclick="openRemoveModal()" type="button">Remove Biometric</button>
+            {% else %}
+                <div class="finger-slots">
+                    <div class="finger-slot optional">
+                        <div class="finger-slot-icon">
+                           <i class="fa-solid fa-fingerprint"></i>
+                        </div>
+                        <div class="finger-slot-name">Finger 1</div>
+                        <div class="finger-slot-status">Not registered</div>
+                        <span class="finger-slot-tag req">Required</span>
+                    </div>
+                    <div class="finger-slot optional">
+                        <div class="finger-slot-icon">
+     <i class="fa-solid fa-fingerprint"></i>
+</div>
+                        <div class="finger-slot-name">Finger 2</div>
+                        <div class="finger-slot-status">Not registered</div>
+                        <span class="finger-slot-tag opt">Optional</span>
+                    </div>
+                </div>
+                <p style="font-size:12px;color:#475569;margin-bottom:1rem;">Registering 2 fingers recommended — backup if one finger fails to scan.</p>
+                <button class="btn-success" onclick="openRegisterModal()" type="button">Register Biometric</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Accordion ──────────────────────────────────────────────────────
+function toggleAcc(id) {
+    document.getElementById(id).classList.toggle('open');
+}
+
+// ── Eye toggle ─────────────────────────────────────────────────────
+function toggleEye(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// ── Email match validation ─────────────────────────────────────────
+function checkEmailMatch() {
+    const ne = document.getElementById('newEmail').value;
+    const ce = document.getElementById('confEmail').value;
+    const msg = document.getElementById('emailMatchMsg');
+    const inp = document.getElementById('confEmail');
+    if (!ce) { msg.textContent = ''; inp.className = 'field-input'; return; }
+    if (ne === ce) {
+        msg.textContent = '✓ Emails match';
+        msg.className = 'email-match-msg ok';
+        inp.className = 'field-input match-ok';
+    } else {
+        msg.textContent = '✗ Emails do not match';
+        msg.className = 'email-match-msg error';
+        inp.className = 'field-input match-error';
+    }
+}
+
+// ── Password strength ──────────────────────────────────────────────
+const pwRules = [
+    { label: '8+ chars',  test: p => p.length >= 8 },
+    { label: 'Uppercase', test: p => /[A-Z]/.test(p) },
+    { label: 'Lowercase', test: p => /[a-z]/.test(p) },
+    { label: 'Number',    test: p => /[0-9]/.test(p) },
+    { label: 'Symbol',    test: p => /[^A-Za-z0-9]/.test(p) },
+];
+function checkNewPw() {
+    const pw = document.getElementById('newPw').value;
+    const bar = document.getElementById('pwStrBar');
+    const txt = document.getElementById('pwStrText');
+    const chk = document.getElementById('pwChecks');
+    const passed = pwRules.filter(r => r.test(pw)).length;
+    const levels = [
+        {max:2,w:'25%',c:'#ef4444',l:'Weak'},
+        {max:3,w:'50%',c:'#f97316',l:'Fair'},
+        {max:4,w:'75%',c:'#eab308',l:'Good'},
+        {max:5,w:'100%',c:'#22c55e',l:'Strong'},
+    ];
+    const lvl = levels.find(l => passed <= l.max) || levels[3];
+    bar.style.width = pw.length ? lvl.w : '0%';
+    bar.style.background = lvl.c;
+    txt.textContent = pw.length ? lvl.l : '';
+    txt.style.color = lvl.c;
+    chk.innerHTML = pwRules.map(r => {
+        const ok = r.test(pw);
+        return `<span class="vcheck ${ok?'pass':'fail'}">${ok?'✓':'✗'} ${r.label}</span>`;
+    }).join('');
+    checkConfirm();
+}
+function checkConfirm() {
+    const pw = document.getElementById('newPw').value;
+    const cf = document.getElementById('confPw').value;
+    const msg = document.getElementById('matchMsg');
+    if (!cf) { msg.textContent = ''; return; }
+    msg.textContent = pw === cf ? '✓ Passwords match' : '✗ Passwords do not match';
+    msg.className = 'match-msg ' + (pw === cf ? 'ok' : 'error');
+}
+
+// ── Register Modal ─────────────────────────────────────────────────
+let fingerCount = 1;
+
+function selectFingers(n) {
+    fingerCount = n;
+    document.getElementById('choice1').classList.toggle('selected', n === 1);
+    document.getElementById('choice2').classList.toggle('selected', n === 2);
+}
+
+function openRegisterModal() {
+    document.getElementById('registerModal').classList.add('active');
+    document.getElementById('bioStep1').style.display = 'block';
+    document.getElementById('bioStep2').style.display = 'none';
+    fingerCount = 1;
+    selectFingers(1);
+}
+function closeRegisterModal() {
+    document.getElementById('registerModal').classList.remove('active');
+}
+
+function startBioScan() {
+    document.getElementById('fingersInput').value = fingerCount;
+    document.getElementById('bioStep1').style.display = 'none';
+    document.getElementById('bioStep2').style.display = 'block';
+
+    const ring   = document.getElementById('scannerRing');
+    const inner  = document.getElementById('scannerInner');
+    const line   = document.getElementById('scanLine');
+    const status = document.getElementById('modalStatus');
+    const prog   = document.getElementById('fingerProgress');
+    const steps  = document.getElementById('bioSteps');
+
+    // Build finger indicators
+    prog.innerHTML = '';
+    for (let i = 1; i <= fingerCount; i++) {
+        prog.innerHTML += `<div class="fp-indicator">
+            <div class="fp-dot ${i===1?'active':''}" id="fpDot${i}">👆</div>
+            <div class="fp-label ${i===1?'active':''}" id="fpLbl${i}">Finger ${i}</div>
+        </div>`;
+    }
+
+    // Build steps
+    const stepDefs = fingerCount === 2 ? [
+        'Place finger 1 on Touch ID',
+        'Place finger 2 on Touch ID',
+        'Encrypting biometric data locally',
+        'Linking credential to account'
+    ] : [
+        'Place finger on Touch ID',
+        'Lift and place again to confirm',
+        'Encrypting biometric data locally',
+        'Linking credential to account'
+    ];
+    steps.innerHTML = stepDefs.map((s,i) =>
+        `<div class="bio-step ${i===0?'active':''}" id="bStep${i+1}">
+            <div class="step-dot">${i+1}</div><span>${s}</span>
+        </div>`
+    ).join('');
+
+    function setStep(n) {
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById('bStep'+i);
+            if (!el) return;
+            const dot = el.querySelector('.step-dot');
+            if (i < n)        { el.className = 'bio-step done';   dot.textContent = '✓'; }
+            else if (i === n) { el.className = 'bio-step active';  dot.textContent = i; }
+            else              { el.className = 'bio-step';         dot.textContent = i; }
+        }
+    }
+    function markDot(n, state) {
+        const dot = document.getElementById('fpDot'+n);
+        const lbl = document.getElementById('fpLbl'+n);
+        if (!dot) return;
+        dot.className = 'fp-dot ' + state;
+        lbl.className = 'fp-label ' + state;
+        if (state === 'done') dot.textContent = '✓';
+    }
+
+    // Scanning starts
+    setTimeout(() => {
+        ring.className  = 'scanner-ring scanning';
+        inner.className = 'scanner-inner scanning';
+        line.classList.add('active');
+        status.textContent = fingerCount === 2 ? 'Place finger 1 on Touch ID...' : 'Place your finger on Touch ID...';
+    }, 400);
+
+    if (fingerCount === 2) {
+        // Finger 1 — scan
+        setTimeout(() => { status.textContent = 'Hold still...'; }, 1800);
+        setTimeout(() => { line.classList.remove('active'); ring.className = 'scanner-ring'; inner.className = 'scanner-inner'; status.textContent = 'Lift your finger...'; }, 2800);
+        setTimeout(() => { ring.className = 'scanner-ring scanning'; inner.className = 'scanner-inner scanning'; line.classList.add('active'); status.textContent = 'Place finger 1 again to confirm...'; }, 3600);
+        // Finger 1 done
+        setTimeout(() => {
+            markDot(1, 'done');
+            line.classList.remove('active');
+            ring.className  = 'scanner-ring';
+            inner.className = 'scanner-inner';
+            status.textContent = '✓ Finger 1 registered — now place finger 2';
+            setStep(2);
+        }, 5600);
+        // Finger 2 — scan
+        setTimeout(() => { markDot(2, 'active'); ring.className = 'scanner-ring scanning'; inner.className = 'scanner-inner scanning'; line.classList.add('active'); status.textContent = 'Place finger 2 on Touch ID...'; }, 6600);
+        setTimeout(() => { status.textContent = 'Hold still...'; }, 8000);
+        setTimeout(() => { line.classList.remove('active'); ring.className = 'scanner-ring'; inner.className = 'scanner-inner'; status.textContent = 'Lift your finger...'; }, 9000);
+        setTimeout(() => { ring.className = 'scanner-ring scanning'; inner.className = 'scanner-inner scanning'; line.classList.add('active'); status.textContent = 'Place finger 2 again to confirm...'; }, 9800);
+        // Finger 2 done
+        setTimeout(() => { markDot(2, 'done'); line.classList.remove('active'); setStep(3); status.textContent = 'Encrypting biometric data...'; }, 11800);
+        setTimeout(() => { setStep(4); status.textContent = 'Linking to your account...'; }, 13000);
+        // Success
+        setTimeout(() => {
+            ring.className  = 'scanner-ring success';
+            inner.className = 'scanner-inner success';
+            status.className = 'modal-status success';
+            status.textContent = 'Both fingers registered successfully!';
+            for (let i=1;i<=4;i++){const el=document.getElementById('bStep'+i);if(el){el.className='bio-step done';el.querySelector('.step-dot').textContent='✓';}}
+            document.getElementById('cancelScanBtn').style.display = 'none';
+            setTimeout(() => document.getElementById('regForm').submit(), 1500);
+        }, 14500);
+
+    } else {
+        // 1 finger flow
+        setTimeout(() => { status.textContent = 'Hold still...'; }, 1600);
+        setTimeout(() => { line.classList.remove('active'); ring.className = 'scanner-ring'; inner.className = 'scanner-inner'; status.textContent = 'Lift your finger...'; setStep(2); }, 2800);
+        setTimeout(() => { ring.className = 'scanner-ring scanning'; inner.className = 'scanner-inner scanning'; line.classList.add('active'); status.textContent = 'Place same finger again to confirm...'; }, 3600);
+        setTimeout(() => { markDot(1, 'done'); line.classList.remove('active'); setStep(3); status.textContent = 'Encrypting biometric data...'; }, 5600);
+        setTimeout(() => { setStep(4); status.textContent = 'Linking to your account...'; }, 6800);
+        setTimeout(() => {
+            ring.className  = 'scanner-ring success';
+            inner.className = 'scanner-inner success';
+            status.className = 'modal-status success';
+            status.textContent = 'Finger registered successfully!';
+            for (let i=1;i<=4;i++){const el=document.getElementById('bStep'+i);if(el){el.className='bio-step done';el.querySelector('.step-dot').textContent='✓';}}
+            document.getElementById('cancelScanBtn').style.display = 'none';
+            setTimeout(() => document.getElementById('regForm').submit(), 1500);
+        }, 8200);
+    }
+}
+
+// ── Remove Modal ────────────────────────────────────────────────────
+function openRemoveModal() {
+    document.getElementById('removeModal').classList.add('active');
+    const ring   = document.getElementById('remRing');
+    const inner  = document.getElementById('remInner');
+    const line   = document.getElementById('remScanLine');
+    const status = document.getElementById('remStatus');
+    setTimeout(() => { ring.className = 'scanner-ring scanning'; inner.className = 'scanner-inner scanning'; line.classList.add('active'); status.textContent = 'Verifying fingerprint...'; }, 500);
+    setTimeout(() => {
+        line.classList.remove('active');
+        ring.className  = 'scanner-ring success';
+        inner.className = 'scanner-inner success';
+        status.className = 'modal-status success';
+        status.textContent = 'Verified — removing biometric...';
+        setTimeout(() => document.getElementById('remForm').submit(), 1000);
+    }, 3000);
+}
+function closeRemoveModal() {
+    document.getElementById('removeModal').classList.remove('active');
+}
+</script>
+</body>
+</html>

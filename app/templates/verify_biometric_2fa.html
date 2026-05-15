@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticator Verification - SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Sora', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+            position: relative; overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%; max-width: 400px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            text-align: center;
+            position: relative; z-index: 1;
+        }
+
+        /* Logo */
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            justify-content: center; margin-bottom: 1.75rem;
+            text-decoration: none;
+        }
+        .brand-name { font-size: 17px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px; }
+        .brand-name span { color: #3b82f6; }
+
+        /* Recovery step indicator — Step 2 active */
+        .recovery-steps {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 1.75rem;
+        }
+        .rs-step { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; }
+        .rs-dot {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700;
+        }
+        .rs-dot.done    { background: #22c55e; color: #fff; }
+        .rs-dot.active  { background: #1d4ed8; color: #fff; }
+        .rs-dot.pending { background: #e2e8f0; color: #94a3b8; }
+        .rs-label { color: #94a3b8; font-size: 11px; }
+        .rs-label.done   { color: #22c55e; }
+        .rs-label.active { color: #1d4ed8; }
+        .rs-connector { width: 24px; height: 2px; border-radius: 1px; }
+        .rs-connector.done { background: #22c55e; }
+        .rs-connector.pending { background: #e2e8f0; }
+
+        /* Authenticator icon */
+        .auth-icon-wrap {
+            width: 80px; height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #eff6ff, #eef2ff);
+            border: 1px solid #bfdbfe;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        .auth-icon-wrap svg { width: 40px; height: 40px; color: #1d4ed8; }
+
+        .page-title { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px; }
+        .page-sub   { font-size: 13px; color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.6; }
+
+        /* Flash messages */
+        .flash-error {
+            background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 13px; color: #dc2626; font-weight: 500;
+            margin-bottom: 14px;
+        }
+
+        /* Timer bar */
+        .timer-wrap { margin-bottom: 12px; }
+        .timer-bar-bg {
+            height: 3px; background: #e2e8f0; border-radius: 99px;
+            margin-bottom: 6px; overflow: hidden;
+        }
+        .timer-bar { height: 100%; border-radius: 99px; background: #22c55e; transition: width 1s linear, background 0.5s; }
+        .timer-text { font-size: 12px; font-weight: 600; color: #22c55e; transition: color 0.5s; }
+
+        /* OTP input */
+        .otp-input {
+            width: 100%; padding: 16px 14px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-family: 'Sora', sans-serif;
+            font-size: 28px; font-weight: 700;
+            letter-spacing: 12px; text-align: center;
+            color: #0f172a; background: #f8fafc;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            outline: none; margin-bottom: 16px;
+        }
+        .otp-input::placeholder { color: #cbd5e1; letter-spacing: 8px; font-size: 20px; }
+        .otp-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .otp-input.input-error { border-color: #ef4444; background: #fff; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+
+        /* Info box */
+        .info-box {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 16px; text-align: left;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .info-box svg { width: 15px; height: 15px; color: #3b82f6; flex-shrink: 0; margin-top: 1px; }
+        .info-box p { font-size: 12px; color: #64748b; line-height: 1.5; }
+        .info-box p strong { color: #1e293b; }
+
+        /* Submit button */
+        .btn-primary {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: #1d4ed8; color: #fff;
+            font-size: 14px; font-weight: 600;
+            font-family: 'Sora', sans-serif; cursor: pointer;
+            margin-bottom: 12px;
+            transition: background 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary:hover { background: #1e40af; box-shadow: 0 4px 15px rgba(29,78,216,0.35); }
+        .btn-primary:active { transform: scale(0.99); }
+        .btn-primary svg { width: 16px; height: 16px; }
+
+        .back-link { font-size: 13px; color: #94a3b8; text-decoration: none; display: block; transition: color 0.2s; }
+        .back-link:hover { color: #2563eb; }
+
+        /* Expired overlay */
+        .expired-notice {
+            display: none;
+            background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; color: #dc2626; font-weight: 500;
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+
+    <!-- Logo -->
+    <a href="/login" class="brand">
+        <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+          <polygon points="100,16 172,59 172,141 100,184 28,141 28,59" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="6 4"/>
+          <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+          <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+          <circle cx="100" cy="5" r="4" fill="#38bdf8"/><circle cx="183" cy="52" r="4" fill="#38bdf8"/>
+          <circle cx="183" cy="148" r="4" fill="#38bdf8"/><circle cx="100" cy="195" r="4" fill="#38bdf8"/>
+          <circle cx="17" cy="148" r="4" fill="#38bdf8"/><circle cx="17" cy="52" r="4" fill="#38bdf8"/>
+          <line x1="100" y1="5" x2="100" y2="28" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="52" x2="162" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="148" x2="162" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="100" y1="195" x2="100" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="148" x2="38" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="52" x2="38" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="100" x2="38" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <line x1="162" y1="100" x2="183" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <circle cx="17" cy="100" r="2.5" fill="#60a5fa"/><circle cx="183" cy="100" r="2.5" fill="#60a5fa"/>
+          <circle cx="100" cy="90" r="38" fill="none" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 5"/>
+          <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+          <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+          <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+          <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+          <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+          <path d="M76 118 Q100 134 124 118" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M81 124 Q100 137 119 124" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M86 129 Q100 139 114 129" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M91 133 Q100 140 109 133" stroke="#c7d2fe" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="brand-name">Secure<span>Vault</span></span>
+    </a>
+
+    <!-- Recovery step indicator — Step 2 of 3 active -->
+    <div class="recovery-steps">
+        <div class="rs-step">
+            <div class="rs-dot done">✓</div>
+            <span class="rs-label done">Biometric</span>
+        </div>
+        <div class="rs-connector done"></div>
+        <div class="rs-step">
+            <div class="rs-dot active">2</div>
+            <span class="rs-label active">Authenticator</span>
+        </div>
+        <div class="rs-connector pending"></div>
+        <div class="rs-step">
+            <div class="rs-dot pending">3</div>
+            <span class="rs-label">Reset</span>
+        </div>
+    </div>
+
+    <!-- Icon -->
+    <div class="auth-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+            <path d="M9 7h6M9 11h4"/>
+        </svg>
+    </div>
+
+    <div class="page-title">Authenticator Confirmation</div>
+    <div class="page-sub">Enter the 6-digit code from your authenticator app to complete account recovery.</div>
+
+    {% with messages = get_flashed_messages(category_filter=["auth_error"], with_categories=true) %}
+        {% for category, msg in messages %}
+            <div class="flash-error">{{ msg }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- TOTP countdown timer (30s window) -->
+    <div class="timer-wrap">
+        <div class="timer-bar-bg">
+            <div class="timer-bar" id="timerBar"></div>
+        </div>
+        <div class="timer-text" id="timerText">Code refreshes in 30s</div>
+    </div>
+
+    <form method="POST" action="/verify-biometric-2fa">
+        <input type="text" name="totp_code" id="otpInput"
+               class="otp-input"
+               placeholder="000000"
+               maxlength="6"
+               inputmode="numeric"
+               pattern="[0-9]{6}"
+               autocomplete="one-time-code"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+               required autofocus>
+
+        <div class="info-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>Open <strong>Google Authenticator</strong> or your authenticator app and enter the current 6-digit code for your SecureVault account.</p>
+        </div>
+
+        <div class="expired-notice" id="expiredNotice">
+            ⚠ Code may have expired. Check your app for the latest code.
+        </div>
+
+        <button type="submit" class="btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Confirm & Continue
+        </button>
+    </form>
+
+    <a href="/verify-biometric" class="back-link">← Back to Biometric</a>
+</div>
+
+<script>
+// TOTP 30-second countdown timer (synced to real TOTP window)
+function startTotpTimer() {
+    const bar  = document.getElementById('timerBar');
+    const text = document.getElementById('timerText');
+    const notice = document.getElementById('expiredNotice');
+
+    function update() {
+        const now     = Math.floor(Date.now() / 1000);
+        const elapsed = now % 30;
+        const remaining = 30 - elapsed;
+        const pct = (remaining / 30) * 100;
+
+        bar.style.width = pct + '%';
+        text.textContent = `Code refreshes in ${remaining}s`;
+
+        // Colour shift: green → orange → red as time runs out
+        if (remaining > 10) {
+            bar.style.background  = '#22c55e';
+            text.style.color      = '#16a34a';
+        } else if (remaining > 5) {
+            bar.style.background  = '#f97316';
+            text.style.color      = '#ea580c';
+        } else {
+            bar.style.background  = '#ef4444';
+            text.style.color      = '#dc2626';
+            notice.style.display  = 'block';
+        }
+
+        // Reset notice when code refreshes
+        if (remaining === 30) notice.style.display = 'none';
+    }
+
+    update();
+    setInterval(update, 1000);
+}
+
+// Only allow digits in OTP input
+document.getElementById('otpInput').addEventListener('keypress', e => {
+    if (!/[0-9]/.test(e.key)) e.preventDefault();
+});
+
+startTotpTimer();
+</script>
+</body>
+</html>

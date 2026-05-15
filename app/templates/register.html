@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register - SecureVault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.12; pointer-events: none; animation: blob-float 8s ease-in-out infinite; }
+        .blob1 { width: 500px; height: 500px; background: #38bdf8; top: -100px; left: -100px; animation-delay: 0s; }
+        .blob2 { width: 400px; height: 400px; background: #818cf8; bottom: -80px; right: -80px; animation-delay: 3s; }
+        .blob3 { width: 300px; height: 300px; background: #2563eb; top: 40%; left: 50%; animation-delay: 1.5s; }
+        @keyframes blob-float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-30px) scale(1.05)} }
+
+        .shell {
+            display: flex;
+            width: 920px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── LEFT PANEL ── */
+        .left {
+            flex: 1;
+            background: rgba(255,255,255,0.97);
+            padding: 2.5rem 2.25rem;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; text-decoration: none; }
+        .brand-name { font-size: 19px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
+        .brand-name span { color: #2563eb; }
+
+        .page-heading { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+        .page-sub { font-size: 12px; color: #94a3b8; margin-bottom: 1.25rem; }
+
+        .free-badge { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(56,189,248,0.1), rgba(129,140,248,0.1)); border: 1px solid rgba(56,189,248,0.25); border-radius: 20px; padding: 5px 12px; font-size: 11px; font-weight: 600; color: #2563eb; margin-bottom: 1.25rem; }
+
+        /* Flash messages */
+        .msg-error   { color: #dc2626; font-size: 12px; margin-bottom: 10px; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
+        .msg-success { color: #16a34a; font-size: 12px; margin-bottom: 10px; padding: 8px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+
+        .section-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.6rem; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
+        .full { grid-column: 1 / -1; }
+
+        /* Fields */
+        .field { margin-bottom: 0.75rem; }
+        .input-row { position: relative; }
+
+        .input-icon {
+            position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; width: 15px; height: 15px; pointer-events: none;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%; border: 1.5px solid #e2e8f0; border-radius: 9px;
+            padding: 9px 36px 9px 34px; color: #0f172a; font-size: 13px;
+            font-family: 'Sora', sans-serif; transition: border-color 0.2s, box-shadow 0.2s;
+            background: #f8fafc; outline: none;
+        }
+        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); background: #fff; }
+        input::placeholder { color: #cbd5e1; }
+        input.input-ok    { border-color: #22c55e !important; }
+        input.input-error { border-color: #ef4444 !important; }
+
+        /* Eye button — SVG */
+        .eye-btn {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: #94a3b8;
+            padding: 2px; display: flex; align-items: center; transition: color 0.2s;
+        }
+        .eye-btn:hover { color: #475569; }
+        .eye-btn svg { width: 16px; height: 16px; }
+
+        /* Email status */
+        .email-status {
+            font-size: 11px; margin-top: 3px; min-height: 14px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .email-status.ok    { color: #16a34a; }
+        .email-status.error { color: #ef4444; }
+        .email-status.checking { color: #94a3b8; }
+
+        /* Strength bars */
+        .strength-bars { display: flex; gap: 4px; margin-top: 5px; }
+        .strength-bar { height: 3px; flex: 1; border-radius: 99px; background: #e2e8f0; transition: background 0.3s; }
+        .strength-row { display: flex; justify-content: space-between; margin-top: 3px; }
+        .strength-label { font-size: 10.5px; color: #94a3b8; transition: color 0.3s; font-weight: 600; }
+
+        /* Requirement checklist */
+        .check-list {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+            padding: 8px 10px; margin-top: 6px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+        }
+        .check-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; transition: color 0.2s; }
+        .check-item.pass { color: #16a34a; }
+        .check-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: border-color 0.2s, background 0.2s;
+        }
+        .check-item.pass .check-dot { border-color: #16a34a; background: #16a34a; }
+        .check-dot svg { width: 7px; height: 7px; color: white; opacity: 0; transition: opacity 0.2s; }
+        .check-item.pass .check-dot svg { opacity: 1; }
+
+        /* Match indicator */
+        .match-msg { font-size: 11px; margin-top: 3px; min-height: 14px; display: flex; align-items: center; gap: 4px; }
+        .match-msg.ok { color: #16a34a; }
+        .match-msg.error { color: #dc2626; }
+
+        /* ── Security Questions — collapsible ── */
+        .sq-toggle {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            background: #f0f9ff; border: 1.5px solid #bae6fd; border-radius: 10px;
+            padding: 11px 14px; cursor: pointer; font-family: 'Sora', sans-serif;
+            transition: border-color 0.2s; margin-bottom: 0;
+        }
+        .sq-toggle:hover { border-color: #38bdf8; }
+        .sq-toggle.open { border-radius: 10px 10px 0 0; }
+        .sq-toggle-left { display: flex; align-items: center; gap: 10px; }
+        .sq-chevron { font-size: 11px; color: #0369a1; transition: transform 0.3s; }
+        .sq-toggle.open .sq-chevron { transform: rotate(180deg); }
+        .sq-body { display: none; background: #f0f9ff; border: 1.5px solid #bae6fd; border-top: none; border-radius: 0 0 10px 10px; padding: 14px; margin-bottom: 0.75rem; }
+        .sq-body.open { display: block; }
+        .sq-section {
+            background: #f0f9ff;
+            border: 1.5px solid #bae6fd;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Why required callout */
+        .sq-why {
+            background: #fff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .sq-why svg { width: 16px; height: 16px; color: #0369a1; flex-shrink: 0; margin-top: 1px; }
+        .sq-why-text { font-size: 11.5px; color: #0369a1; line-height: 1.6; }
+        .sq-why-text strong { display: block; font-size: 12px; margin-bottom: 2px; color: #0c4a6e; }
+
+        .sq-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .sq-header svg { width: 18px; height: 18px; color: #0369a1; }
+        .sq-header-text { font-size: 13px; font-weight: 700; color: #0369a1; }
+        .sq-required-badge {
+            font-size: 10px; font-weight: 700; background: #fee2e2;
+            color: #dc2626; padding: 2px 7px; border-radius: 10px;
+            letter-spacing: 0.3px; margin-left: auto;
+        }
+
+        .question-group { background: #fff; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+        .question-group:last-child { margin-bottom: 0; }
+        .question-label { font-size: 10px; font-weight: 700; color: #0369a1; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        select {
+            width: 100%; padding: 8px 12px; margin-bottom: 6px;
+            border-radius: 7px; border: 1.5px solid #bae6fd;
+            background: #f8fafc; color: #334155; font-size: 12px;
+            font-family: 'Sora', sans-serif; appearance: none; outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center;
+            transition: border-color 0.2s;
+        }
+        select:focus { border-color: #2563eb; }
+
+        .sq-answer {
+            width: 100%; padding: 8px 12px;
+            border: 1.5px solid #bae6fd; border-radius: 7px;
+            font-size: 12px; font-family: 'Sora', sans-serif;
+            background: #f8fafc; color: #0f172a; outline: none;
+            transition: border-color 0.2s;
+        }
+        .sq-answer:focus { border-color: #2563eb; background: #fff; }
+        .sq-answer::placeholder { color: #94a3b8; }
+
+        .dup-error { color: #dc2626; font-size: 11px; display: none; margin-top: 8px; padding: 6px 10px; background: #fef2f2; border-radius: 6px; }
+
+        /* Terms */
+        .terms-row { display: flex; align-items: flex-start; gap: 9px; margin: 0.75rem 0; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; }
+        .terms-row input[type="checkbox"] { width: 15px; min-width: 15px; height: 15px; margin-top: 1px; cursor: pointer; accent-color: #2563eb; }
+        .terms-row label { font-size: 11px; color: #64748b; cursor: pointer; line-height: 1.5; }
+
+        /* Submit */
+        .btn-primary {
+            width: 100%; padding: 11px; border-radius: 10px; border: none;
+            background: #1d4ed8;
+            color: #fff; font-size: 14px; font-weight: 600;
+            font-family: 'Sora', sans-serif; cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            
+        }
+        .btn-primary:hover { background: #1e40af; box-shadow: 0 4px 15px rgba(29,78,216,0.35); }
+        .btn-primary:active { transform: scale(0.99); }
+        .btn-primary span { position: relative; z-index: 1; }
+
+        .login-link { display: block; margin-top: 0.75rem; font-size: 12px; text-align: center; color: #64748b; }
+        .login-link a { color: #2563eb; text-decoration: none; font-weight: 500; }
+
+        /* ── RIGHT PANEL ── */
+        .right {
+            width: 300px; flex-shrink: 0;
+            background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 2rem 1.5rem; 
+        }
+        .right-glow { position: absolute; width: 250px; height: 250px; border-radius: 50%; background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        .right-rings { position: absolute; inset: 0; pointer-events: none; }
+        .pulse-ring { animation: pulse 3s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:0.08} 50%{opacity:0.2} }
+        .float { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .right-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); border-radius: 20px; padding: 5px 12px; font-size: 11px; color: #38bdf8; font-weight: 600; margin-bottom: 1.25rem; }
+        .right-title { color: #f1f5f9; font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -0.3px; }
+        .right-sub { color: #475569; font-size: 11px; text-align: center; line-height: 1.7; margin-bottom: 1.5rem; }
+        .feature-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+        .feature-item { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 9px 12px; }
+        .feature-icon { font-size: 16px; flex-shrink: 0; }
+        .feature-text { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+        .feature-text strong { color: #e2e8f0; font-weight: 600; display: block; }
+
+        @media (max-width: 680px) { .shell { flex-direction: column; width: 95vw; } .right { width: 100%; min-height: 180px; } .form-grid { grid-template-columns: 1fr; } .full { grid-column: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="bg-blob blob1"></div>
+<div class="bg-blob blob2"></div>
+<div class="bg-blob blob3"></div>
+
+<div class="shell">
+    <!-- ── LEFT PANEL ── -->
+    <div class="left">
+        <a href="/login" class="brand">
+            <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+              <polygon points="100,16 172,59 172,141 100,184 28,141 28,59" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="6 4"/>
+              <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+              <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+              <circle cx="100" cy="5" r="4" fill="#38bdf8"/><circle cx="183" cy="52" r="4" fill="#38bdf8"/>
+              <circle cx="183" cy="148" r="4" fill="#38bdf8"/><circle cx="100" cy="195" r="4" fill="#38bdf8"/>
+              <circle cx="17" cy="148" r="4" fill="#38bdf8"/><circle cx="17" cy="52" r="4" fill="#38bdf8"/>
+              <line x1="100" y1="5" x2="100" y2="28" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="183" y1="52" x2="162" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="183" y1="148" x2="162" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="100" y1="195" x2="100" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="148" x2="38" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="52" x2="38" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+              <line x1="17" y1="100" x2="38" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+              <line x1="162" y1="100" x2="183" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+              <circle cx="17" cy="100" r="2.5" fill="#60a5fa"/><circle cx="183" cy="100" r="2.5" fill="#60a5fa"/>
+              <circle cx="100" cy="90" r="38" fill="none" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 5"/>
+              <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+              <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+              <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+              <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+              <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+              <path d="M76 118 Q100 134 124 118" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M81 124 Q100 137 119 124" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M86 129 Q100 139 114 129" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+              <path d="M91 133 Q100 140 109 133" stroke="#c7d2fe" stroke-width="1" stroke-linecap="round" fill="none"/>
+            </svg>
+            <div class="brand-name">Secure<span>Vault</span></div>
+        </a>
+
+        <div class="page-heading">Create your account</div>
+        <div class="page-sub">Your passwords, encrypted and protected.</div>
+        <div class="free-badge">✨ Free forever — no credit card required</div>
+
+        {% with messages = get_flashed_messages(category_filter=["auth_error","auth_success"], with_categories=true) %}
+            {% for category, msg in messages %}
+                <p class="{{ 'msg-success' if category == 'auth_success' else 'msg-error' }}">{{ msg }}</p>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" autocomplete="off" onsubmit="return validateBeforeSubmit()">
+
+            <div class="section-label">Account Info</div>
+            <div class="form-grid">
+
+                <!-- Username -->
+                <div class="field">
+                    <div class="input-row">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <input type="text" name="username" placeholder="Username" required autocomplete="off" maxlength="50">
+                    </div>
+                </div>
+
+                <!-- Email with live validation -->
+                <div class="field">
+                    <div class="input-row">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <path d="m2 7 10 7 10-7"/>
+                        </svg>
+                        <input type="email" id="emailInput" name="email" placeholder="Email address"
+                               required autocomplete="off" onblur="checkEmail()" oninput="resetEmailStatus()">
+                    </div>
+                    <div class="email-status" id="emailStatus"></div>
+                </div>
+
+                <!-- Password -->
+                <div class="field full">
+                    <div class="input-row">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <input type="password" id="password" name="password"
+                           placeholder="Master password" oninput="checkPassword()"
+                           autocomplete="new-password" required style="padding-right:36px;">
+                    <button type="button" class="eye-btn" onclick="toggleEye('password','eye-pw-show','eye-pw-hide')" tabindex="-1">
+                        <svg id="eye-pw-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg id="eye-pw-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </button>
+                    </div><!-- /input-row -->
+
+                    <!-- 4-bar strength meter -->
+                    <div class="strength-bars">
+                        <div class="strength-bar" id="sb1"></div>
+                        <div class="strength-bar" id="sb2"></div>
+                        <div class="strength-bar" id="sb3"></div>
+                        <div class="strength-bar" id="sb4"></div>
+                    </div>
+                    <div class="strength-row">
+                        <span class="strength-label" id="strengthLabel">Enter a password</span>
+                    </div>
+
+                    <!-- Requirement checklist -->
+                    <div class="check-list">
+                        <div class="check-item" id="chk-len">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            8+ characters
+                        </div>
+                        <div class="check-item" id="chk-upper">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            Uppercase (A-Z)
+                        </div>
+                        <div class="check-item" id="chk-lower">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            Lowercase (a-z)
+                        </div>
+                        <div class="check-item" id="chk-num">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            Number (0-9)
+                        </div>
+                        <div class="check-item" id="chk-sym">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            Symbol (!@#$%)
+                        </div>
+                        <div class="check-item" id="chk-long">
+                            <div class="check-dot"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="2,6 5,9 10,3"/></svg></div>
+                            12+ chars (ideal)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confirm password -->
+                <div class="field full">
+                    <div class="input-row">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           placeholder="Confirm password" oninput="checkMatch()"
+                           autocomplete="new-password" required style="padding-right:36px;">
+                    <button type="button" class="eye-btn" onclick="toggleEye('confirm_password','eye-cf-show','eye-cf-hide')" tabindex="-1">
+                        <svg id="eye-cf-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg id="eye-cf-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </button>
+                    </div><!-- /input-row -->
+                    <div class="match-msg" id="matchMsg"></div>
+                </div>
+            </div>
+
+            <!-- ── Security Questions — collapsible ── -->
+            <div class="section-label">Security Questions</div>
+
+            <button type="button" class="sq-toggle" id="sqToggle" onclick="toggleSQ()">
+                <div class="sq-toggle-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0369a1" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:#0369a1;">Set up security questions</div>
+                        <div style="font-size:11px;color:#61afd4;">Required for password reset — click to expand</div>
+                    </div>
+                </div>
+                <span class="sq-required-badge" style="margin-left:auto;margin-right:8px;">REQUIRED</span>
+                <span class="sq-chevron">▼</span>
+            </button>
+
+            <div class="sq-body" id="sqBody">
+
+                <!-- Why callout -->
+                <div class="sq-why">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div class="sq-why-text">
+                        <strong>Why is this required?</strong>
+                        If you ever forget your master password, security questions are your backup recovery method. Without them, your account cannot be recovered — your encrypted vault would be permanently inaccessible. Answers are hashed and never stored in plaintext.
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <div class="question-label">Question 1</div>
+                    <select name="security_question_1" id="sq1" onchange="checkDuplicates()" required>
+                        <option value="" disabled selected>Select a question...</option>
+                        {% for q in security_questions %}
+                            <option value="{{ q }}">{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="sq-answer" type="text" name="security_answer_1" placeholder="Your answer" required autocomplete="off">
+                </div>
+
+                <div class="question-group">
+                    <div class="question-label">Question 2</div>
+                    <select name="security_question_2" id="sq2" onchange="checkDuplicates()" required>
+                        <option value="" disabled selected>Select a question...</option>
+                        {% for q in security_questions %}
+                            <option value="{{ q }}">{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="sq-answer" type="text" name="security_answer_2" placeholder="Your answer" required autocomplete="off">
+                </div>
+
+                <div class="question-group">
+                    <div class="question-label">Question 3</div>
+                    <select name="security_question_3" id="sq3" onchange="checkDuplicates()" required>
+                        <option value="" disabled selected>Select a question...</option>
+                        {% for q in security_questions %}
+                            <option value="{{ q }}">{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="sq-answer" type="text" name="security_answer_3" placeholder="Your answer" required autocomplete="off">
+                </div>
+
+                <div class="dup-error" id="dupError">⚠ Please select 3 different questions.</div>
+            </div><!-- /sq-body -->
+
+            <!-- Terms -->
+            <div class="terms-row">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">I agree that this system is for authorised use only and I am responsible for keeping my credentials secure.</label>
+            </div>
+
+            <button type="submit" class="btn-primary"><span>Create Account →</span></button>
+        </form>
+
+        <div class="login-link">Already have an account? <a href="/login">Login here</a></div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="right">
+        <div class="right-glow"></div>
+        <svg class="right-rings" viewBox="0 0 300 600" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="150" cy="300" r="160" fill="none" stroke="rgba(56,189,248,0.06)" stroke-width="1"/>
+            <circle class="pulse-ring" cx="150" cy="300" r="110" fill="none" stroke="rgba(56,189,248,0.15)" stroke-width="1"/>
+        </svg>
+
+        <svg class="float" width="100" height="110" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:1rem;">
+            <defs>
+                <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#38bdf8"/>
+                    <stop offset="100%" stop-color="#818cf8"/>
+                </linearGradient>
+            </defs>
+            <rect x="28" y="62" width="144" height="132" rx="18" fill="#1e3a5f" stroke="rgba(56,189,248,0.38)" stroke-width="1.5"/>
+            <rect x="46" y="80" width="108" height="96" rx="10" fill="rgba(56,189,248,0.06)" stroke="rgba(56,189,248,0.18)" stroke-width="1"/>
+            <circle cx="100" cy="128" r="24" fill="url(#rg)" opacity="0.88"/>
+            <circle cx="100" cy="128" r="16" fill="#0f172a"/>
+            <circle cx="100" cy="128" r="6" fill="url(#rg)"/>
+            <path d="M68 44 C68 24 132 24 132 44 L132 67 L68 67 Z" fill="url(#rg)" opacity="0.82"/>
+            <rect x="84" y="55" width="32" height="30" rx="6" fill="#0f172a"/>
+            <circle cx="100" cy="67" r="5.5" fill="url(#rg)"/>
+            <rect x="97.5" y="67" width="5" height="9" rx="2.5" fill="url(#rg)"/>
+        </svg>
+
+        <div class="right-badge">✨ Free forever</div>
+        <div class="right-title">Why SecureVault?</div>
+        <div class="right-sub">Built with enterprise-grade security, free for everyone.</div>
+
+        <div class="feature-list">
+            <div class="feature-item">
+                <span class="feature-icon">🔐</span>
+                <div class="feature-text"><strong>AES-256 Encryption</strong>Military-grade encryption for every saved password</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">📱</span>
+                <div class="feature-text"><strong>Two-Factor Auth</strong>TOTP or Email OTP — your choice</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🛡️</span>
+                <div class="feature-text"><strong>Argon2 Hashing</strong>Your master password is never stored in plaintext</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">👆</span>
+                <div class="feature-text"><strong>Biometric Recovery</strong>Touch ID backup if you're ever locked out</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Password rules & strength ──
+const rules = [
+    { id: 'chk-len',   test: p => p.length >= 8 },
+    { id: 'chk-upper', test: p => /[A-Z]/.test(p) },
+    { id: 'chk-lower', test: p => /[a-z]/.test(p) },
+    { id: 'chk-num',   test: p => /[0-9]/.test(p) },
+    { id: 'chk-sym',   test: p => /[^A-Za-z0-9]/.test(p) },
+    { id: 'chk-long',  test: p => p.length >= 12 },
+];
+
+const strengthColors = ['#ef4444','#f97316','#eab308','#22c55e'];
+const strengthLabels = ['Weak','Fair','Good','Strong'];
+
+function checkPassword() {
+    const p = document.getElementById('password').value;
+    rules.forEach(r => document.getElementById(r.id).classList.toggle('pass', r.test(p)));
+    const score = rules.slice(0,5).filter(r => r.test(p)).length;
+    const bonus = rules[5].test(p) ? 1 : 0;
+    const level = p.length === 0 ? -1 : Math.min(3, Math.floor((score + bonus) / 1.5));
+    ['sb1','sb2','sb3','sb4'].forEach((id, i) => {
+        document.getElementById(id).style.background = p.length === 0 ? '#e2e8f0' : (i <= level ? strengthColors[level] : '#e2e8f0');
+    });
+    const lbl = document.getElementById('strengthLabel');
+    lbl.textContent = p.length === 0 ? 'Enter a password' : strengthLabels[level];
+    lbl.style.color  = p.length === 0 ? '#94a3b8' : strengthColors[level];
+    if (document.getElementById('confirm_password').value) checkMatch();
+}
+
+function checkMatch() {
+    const pw = document.getElementById('password').value;
+    const cf = document.getElementById('confirm_password').value;
+    const msg = document.getElementById('matchMsg');
+    const inp = document.getElementById('confirm_password');
+    if (!cf) { msg.innerHTML = ''; inp.classList.remove('input-ok','input-error'); return; }
+    if (pw === cf) {
+        msg.innerHTML = '✓ Passwords match';
+        msg.className = 'match-msg ok';
+        inp.classList.add('input-ok'); inp.classList.remove('input-error');
+    } else {
+        msg.innerHTML = '✗ Passwords do not match';
+        msg.className = 'match-msg error';
+        inp.classList.add('input-error'); inp.classList.remove('input-ok');
+    }
+}
+
+// ── Eye toggle ──
+function toggleEye(fieldId, showId, hideId) {
+    const input = document.getElementById(fieldId);
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    document.getElementById(showId).style.display = isPassword ? 'none' : '';
+    document.getElementById(hideId).style.display = isPassword ? '' : 'none';
+}
+
+// ── Email live validation ──
+let emailTimer;
+function resetEmailStatus() {
+    clearTimeout(emailTimer);
+    const status = document.getElementById('emailStatus');
+    status.textContent = '';
+    status.className = 'email-status';
+    document.getElementById('emailInput').classList.remove('input-ok','input-error');
+}
+
+function checkEmail() {
+    const email = document.getElementById('emailInput').value.trim();
+    const status = document.getElementById('emailStatus');
+    const input  = document.getElementById('emailInput');
+    if (!email) return;
+
+    status.textContent = 'Checking...';
+    status.className = 'email-status checking';
+
+    fetch('/check-email?email=' + encodeURIComponent(email))
+        .then(r => r.json())
+        .then(data => {
+            if (data.exists) {
+                status.innerHTML = '✗ This email is already registered — <a href="/login" style="color:#ef4444;font-weight:600;">login here</a>';
+                status.className = 'email-status error';
+                input.classList.add('input-error'); input.classList.remove('input-ok');
+            } else {
+                status.textContent = '✓ Email available';
+                status.className = 'email-status ok';
+                input.classList.add('input-ok'); input.classList.remove('input-error');
+            }
+        })
+        .catch(() => { status.textContent = ''; status.className = 'email-status'; });
+}
+
+// ── Duplicate question check ──
+function toggleSQ() {
+    const toggle = document.getElementById('sqToggle');
+    const body   = document.getElementById('sqBody');
+    toggle.classList.toggle('open');
+    body.classList.toggle('open');
+}
+
+function checkDuplicates() {
+    const vals = ['sq1','sq2','sq3'].map(id => document.getElementById(id).value).filter(v => v);
+    document.getElementById('dupError').style.display =
+        (vals.length >= 2 && new Set(vals).size < vals.length) ? 'block' : 'none';
+}
+
+// ── Form validation before submit ──
+function validateBeforeSubmit() {
+    const pw = document.getElementById('password').value;
+    const cf = document.getElementById('confirm_password').value;
+    const emailInput = document.getElementById('emailInput');
+
+    // Block if email already exists
+    if (emailInput.classList.contains('input-error')) {
+        emailInput.focus();
+        return false;
+    }
+
+    // Password rules
+    const missing = rules.slice(0,5).filter(r => !r.test(pw));
+    if (missing.length > 0) {
+        rules.forEach(r => document.getElementById(r.id).classList.toggle('pass', r.test(pw)));
+        return false;
+    }
+    if (pw !== cf) { checkMatch(); return false; }
+
+    // Duplicate questions
+    const q1 = document.getElementById('sq1').value;
+    const q2 = document.getElementById('sq2').value;
+    const q3 = document.getElementById('sq3').value;
+    if (new Set([q1,q2,q3]).size < 3) {
+        document.getElementById('dupError').style.display = 'block';
+        return false;
+    }
+    return true;
+}
+</script>
+</body>
+</html>

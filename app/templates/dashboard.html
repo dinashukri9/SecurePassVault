@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SecureVault — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sora', sans-serif; background: linear-gradient(160deg, #0a0f1e 0%, #0f172a 40%, #1a2744 100%); min-height: 100vh; }
+
+        /* ── Navbar ── */
+        .navbar {
+            background: rgba(10,15,30,0.97);
+            border-bottom: 1px solid rgba(56,189,248,0.08);
+            padding: 0 2rem; height: 64px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        /* Centre brand */
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .brand-name { font-size: 24px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.5px; }
+        .brand-name span { background: linear-gradient(135deg, #182c65, rgb(117, 160, 213)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        .nav-left  { display: flex; align-items: center; }
+        .nav-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+
+        .session-timer {
+            font-size: 12px; font-weight: 600; padding: 5px 12px;
+            border-radius: 20px; background: rgba(34,197,94,0.1);
+            color: #4ade80; border: 1px solid rgba(34,197,94,0.18);
+            transition: all 0.3s; font-variant-numeric: tabular-nums;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .session-timer svg { width: 12px; height: 12px; }
+        .session-timer.warning { background: rgba(251,146,60,0.1); color: #fb923c; border-color: rgba(251,146,60,0.18); }
+        .session-timer.danger  { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.18); }
+
+        .nav-link {
+            color: #64748b; font-size: 12.5px; text-decoration: none;
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .nav-link svg { width: 14px; height: 14px; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: #94a3b8; }
+        .nav-link.logout { color: #f87171; }
+        .nav-link.logout:hover { background: rgba(239,68,68,0.08); }
+
+        /* ── Main ── */
+        .main { max-width: 800px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+
+        /* Expired banner */
+        .expired-banner {
+            background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.18);
+            border-radius: 12px; padding: 12px 18px; margin-bottom: 1.25rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .expired-banner-left { display: flex; align-items: center; gap: 10px; }
+        .expired-banner-left svg { width: 18px; height: 18px; color: #f87171; flex-shrink: 0; }
+        .expired-banner a {
+            padding: 7px 14px; border-radius: 8px; background: #dc2626;
+            color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; white-space: nowrap;
+        }
+
+        /* Welcome bar */
+        .welcome-bar {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(56,189,248,0.1);
+            border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .welcome-text { color: #f1f5f9; font-size: 15px; font-weight: 500; }
+        .welcome-text span { background: linear-gradient(135deg, #38bdf8, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+        .last-login { font-size: 11px; color: #334155; margin-top: 3px; }
+
+        /* ── Security stats row ── */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+        .stat-card {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px; padding: 1rem 1.25rem;
+            display: flex; align-items: center; gap: 12px;
+            transition: border-color 0.2s;
+        }
+        .stat-card:hover { border-color: rgba(56,189,248,0.15); }
+        .stat-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-icon svg { width: 20px; height: 20px; }
+        .stat-icon.blue   { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .stat-icon.green  { background: rgba(34,197,94,0.12);  color: #4ade80; }
+        .stat-icon.red    { background: rgba(239,68,68,0.12);  color: #f87171; }
+        .stat-icon.orange { background: rgba(251,146,60,0.12); color: #fb923c; }
+        .stat-num  { font-size: 24px; font-weight: 700; color: #f1f5f9; line-height: 1; }
+        .stat-lbl  { font-size: 11px; color: #475569; margin-top: 3px; }
+
+        /* Toolbar */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 1.25rem; align-items: center; }
+        .search-wrap { flex: 1; position: relative; }
+        .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #334155; width: 15px; height: 15px; pointer-events: none; }
+        .search-input {
+            width: 100%; background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+            padding: 10px 14px 10px 40px; color: #f1f5f9; font-size: 14px;
+            font-family: 'Sora', sans-serif; transition: border-color 0.2s; outline: none;
+        }
+        .search-input:focus { border-color: rgba(56,189,248,0.4); }
+        .search-input::placeholder { color: #1e3a5f; }
+        .btn-add {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 18px; border-radius: 10px; border: none;
+            background: #1d4ed8; color: #fff;
+            font-size: 13px; font-weight: 600; font-family: 'Sora', sans-serif;
+            text-decoration: none; white-space: nowrap;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(29,78,216,0.3);
+        }
+        .btn-add:hover { background: #1e40af; }
+
+        /* Cards */
+        .card-list { display: flex; flex-direction: column; gap: 10px; }
+        .card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px; padding: 1rem 1.25rem;
+            display: flex; align-items: center; gap: 1rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .card:hover { border-color: rgba(56,189,248,0.18); background: rgba(255,255,255,0.05); }
+        .card-avatar {
+            width: 42px; height: 42px; flex-shrink: 0; border-radius: 10px;
+            background: linear-gradient(135deg, #1e3a5f, #0f172a);
+            border: 1px solid rgba(56,189,248,0.18);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; font-weight: 700; color: #38bdf8; text-transform: uppercase;
+        }
+        .card-info { flex: 1; min-width: 0; }
+        .card-site { font-size: 15px; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-user { font-size: 12px; color: #475569; margin-top: 2px; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 4px; font-size: 10px; font-weight: 600;
+            padding: 2px 8px; border-radius: 20px;
+        }
+        .badge svg { width: 10px; height: 10px; }
+        .badge-expired  { color: #f87171; background: rgba(239,68,68,0.1); }
+        .badge-expiring { color: #fbbf24; background: rgba(245,158,11,0.1); }
+
+        .card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .action-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 11px; border-radius: 8px; border: none;
+            font-size: 12px; font-weight: 500; font-family: 'Sora', sans-serif;
+            cursor: pointer; text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .action-btn svg { width: 13px; height: 13px; }
+        .btn-view   { background: rgba(30,64,175,0.15); color: #60a5fa; }
+        .btn-view:hover   { background: rgba(30,64,175,0.28); }
+        .btn-edit   { background: rgba(99,102,241,0.12); color: #a5b4fc; }
+        .btn-edit:hover   { background: rgba(99,102,241,0.22); }
+        .btn-url    { background: rgba(14,165,233,0.12); color: #38bdf8; }
+        .btn-url:hover    { background: rgba(14,165,233,0.22); }
+        .btn-delete { background: rgba(239,68,68,0.1); color: #f87171; padding: 6px 10px; }
+        .btn-delete:hover { background: rgba(239,68,68,0.2); }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #334155; }
+        .empty-state .empty-icon { width: 56px; height: 56px; background: rgba(30,58,95,0.5); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+        .empty-state .empty-icon svg { width: 28px; height: 28px; color: #334155; }
+        .empty-state h3 { font-size: 17px; color: #475569; font-weight: 500; margin-bottom: 6px; }
+        .empty-state p  { font-size: 13px; color: #1e3a5f; margin-bottom: 1.5rem; }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 78px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: rgba(15,30,60,0.98); border: 1px solid rgba(56,189,248,0.25);
+            color: #f1f5f9; padding: 10px 22px; border-radius: 10px;
+            font-size: 13px; font-weight: 500; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            z-index: 2000; transition: transform 0.35s ease, opacity 0.35s ease;
+            opacity: 0; pointer-events: none; white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* Session warning */
+        .warning-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .warning-overlay.active { display: flex; }
+        .warning-box { background: #0f172a; border: 1px solid rgba(251,146,60,0.25); border-radius: 18px; padding: 2rem; width: 320px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .warning-box h3 { color: #fb923c; margin-bottom: 8px; font-size: 16px; }
+        .warning-box p  { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+        .warning-countdown { font-size: 40px; font-weight: 700; color: #f87171; margin: 10px 0; font-variant-numeric: tabular-nums; }
+        .warning-hint { font-size: 11px; color: #334155; margin-bottom: 1.25rem; }
+        .btn-stay { padding: 10px 24px; border-radius: 10px; border: none; background: #1d4ed8; color: #fff; font-size: 14px; font-weight: 600; font-family: 'Sora', sans-serif; cursor: pointer; }
+
+        /* Delete modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 999; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: #0f172a; border-radius: 18px; padding: 1.75rem; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid rgba(239,68,68,0.2); }
+        .modal-box h3 { color: #f1f5f9; margin-bottom: 6px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .modal-box h3 svg { width: 18px; height: 18px; color: #f87171; }
+        .modal-box p  { font-size: 13px; color: #475569; margin-bottom: 1rem; }
+        .modal-input-wrap { position: relative; margin-bottom: 6px; }
+        .modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 9px; padding: 10px 40px 10px 14px; color: #f1f5f9; font-size: 14px; font-family: 'Sora', sans-serif; outline: none; }
+        .modal-input:focus { border-color: rgba(56,189,248,0.3); }
+        .modal-eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #475569; padding: 2px; display: flex; }
+        .modal-eye svg { width: 16px; height: 16px; }
+        .modal-eye:hover { color: #94a3b8; }
+        .modal-error { color: #f87171; font-size: 12px; margin-bottom: 10px; min-height: 18px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+        .btn-cancel-modal { padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #64748b; font-family: 'Sora', sans-serif; font-size: 13px; cursor: pointer; }
+        .btn-cancel-modal:hover { background: rgba(255,255,255,0.04); }
+        .btn-confirm-delete { padding: 8px 16px; border-radius: 8px; border: none; background: #dc2626; color: #fff; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .btn-confirm-delete:hover { background: #b91c1c; }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+    <div class="nav-left">
+        <span class="session-timer" id="sessionTimer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            --:--
+        </span>
+    </div>
+
+    <!-- Centered logo -->
+    <a href="/dashboard" class="brand">
+        <svg width="56" height="56" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="100,5 183,52 183,148 100,195 17,148 17,52" fill="#0a1628" stroke="#2563eb" stroke-width="2.5"/>
+          <polygon points="100,16 172,59 172,141 100,184 28,141 28,59" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-dasharray="6 4"/>
+          <polygon points="100,28 162,66 162,134 100,172 38,134 38,66" fill="#0f1f3d" stroke="#60a5fa" stroke-width="1"/>
+          <polygon points="100,40 152,73 152,127 100,160 48,127 48,73" fill="#1e3a8a" stroke="#818cf8" stroke-width="0.7"/>
+          <circle cx="100" cy="5" r="4" fill="#38bdf8"/><circle cx="183" cy="52" r="4" fill="#38bdf8"/>
+          <circle cx="183" cy="148" r="4" fill="#38bdf8"/><circle cx="100" cy="195" r="4" fill="#38bdf8"/>
+          <circle cx="17" cy="148" r="4" fill="#38bdf8"/><circle cx="17" cy="52" r="4" fill="#38bdf8"/>
+          <line x1="100" y1="5" x2="100" y2="28" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="52" x2="162" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="183" y1="148" x2="162" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="100" y1="195" x2="100" y2="172" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="148" x2="38" y2="134" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="52" x2="38" y2="66" stroke="#3b82f6" stroke-width="1.5"/>
+          <line x1="17" y1="100" x2="38" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <line x1="162" y1="100" x2="183" y2="100" stroke="#1d4ed8" stroke-width="1.2"/>
+          <circle cx="17" cy="100" r="2.5" fill="#60a5fa"/><circle cx="183" cy="100" r="2.5" fill="#60a5fa"/>
+          <circle cx="100" cy="90" r="38" fill="none" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 5"/>
+          <path d="M82 78 L82 64 C82 50 118 50 118 64 L118 78" stroke="#f8fafc" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <rect x="76" y="78" width="48" height="36" rx="7" fill="#e2e8f0"/>
+          <rect x="78" y="80" width="44" height="32" rx="6" fill="#f8fafc"/>
+          <circle cx="100" cy="92" r="7" fill="#1e40af"/>
+          <circle cx="100" cy="92" r="4.5" fill="#0f172a"/>
+          <rect x="97" y="92" width="6" height="13" rx="3" fill="#1e40af"/>
+          <path d="M76 118 Q100 134 124 118" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M81 124 Q100 137 119 124" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M86 129 Q100 139 114 129" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <path d="M91 133 Q100 140 109 133" stroke="#c7d2fe" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div class="brand-name">Secure<span>Vault</span></div>
+    </a>
+
+    <div class="nav-right">
+        <a href="/activity-log" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Activity
+        </a>
+        <a href="/password-expiry" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Expiry
+        </a>
+        <a href="/settings" class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Settings
+        </a>
+        <a href="/logout" class="nav-link logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+        </a>
+    </div>
+</nav>
+
+<div class="main">
+
+    {% if expired_count > 0 %}
+    <div class="expired-banner">
+        <div class="expired-banner-left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#f87171;">{{ expired_count }} password{{ 's' if expired_count > 1 else '' }} expired</div>
+                <div style="font-size:12px;color:#475569;">Not updated in over 90 days — update them to stay secure</div>
+            </div>
+        </div>
+        <a href="/password-expiry">View All →</a>
+    </div>
+    {% endif %}
+
+    <!-- Welcome bar -->
+    <div class="welcome-bar">
+        <div>
+            <div class="welcome-text">Welcome back, <span>{{ username if username else 'User' }}</span> </div>
+            <div class="last-login">Last login: {{ last_login if last_login else 'N/A' }}</div>
+        </div>
+    </div>
+
+    <!-- ── Security stats row ── -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-num" id="totalCount">{{ passwords|length if passwords else 0 }}</div>
+                <div class="stat-lbl">Total Passwords</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#4ade80;">
+                    {% if passwords %}{{ passwords|selectattr('is_expired','equalto',false)|selectattr('is_expiring_soon','equalto',false)|list|length }}{% else %}0{% endif %}
+                </div>
+                <div class="stat-lbl">Healthy</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-num" style="color:#f87171;">{{ expired_count if expired_count else 0 }}</div>
+                <div class="stat-lbl">Expired / At Risk</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="search-input" type="text" id="search" placeholder="Search by site name..." onkeyup="searchPassword()">
+        </div>
+        <a href="/add" class="btn-add">+ Add Password</a>
+    </div>
+
+    <div class="card-list" id="list">
+        {% if passwords %}
+            {% for p in passwords %}
+            <div class="card" id="card-{{ p.id }}">
+                <div class="card-avatar">{{ p.site_name[0] }}</div>
+                <div class="card-info">
+                    <div class="card-site site">{{ p.site_name }}</div>
+                    <div class="card-user">{{ p.username }}</div>
+                    {% if p.is_expired %}
+                        <div class="badge badge-expired">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Expired {{ p.days_old }} days ago
+                        </div>
+                    {% elif p.is_expiring_soon %}
+                        <div class="badge badge-expiring">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Expires in {{ 90 - p.days_old }} days
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-actions">
+                    <a href="/view/{{ p.id }}" class="action-btn btn-view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        View
+                    </a>
+                    <a href="/edit/{{ p.id }}" class="action-btn btn-edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Edit
+                    </a>
+                    {% if p.url %}
+                        <a href="{{ p.url }}" target="_blank" rel="noopener noreferrer" class="action-btn btn-url">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            Open
+                        </a>
+                    {% else %}
+                        <button class="action-btn btn-url" style="opacity:0.35;cursor:not-allowed;" disabled title="No URL saved">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            Open
+                        </button>
+                    {% endif %}
+                    <button class="action-btn btn-delete" onclick="openDeleteModal({{ p.id }}, '{{ p.site_name }}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state" id="empty-msg">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <h3>No passwords saved yet</h3>
+                <p>Start adding your credentials to keep them safe and encrypted.</p>
+                <a href="/add" class="btn-add">+ Add your first password</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Session warning -->
+<div class="warning-overlay" id="warningOverlay">
+    <div class="warning-box">
+        <h3>⚠️ Session Expiring Soon</h3>
+        <p>You will be automatically logged out in:</p>
+        <div class="warning-countdown" id="warningCountdown">1:00</div>
+        <p class="warning-hint">Any activity will reset your timer.</p>
+        <button class="btn-stay" onclick="stayActive()">I'm still here</button>
+    </div>
+</div>
+
+<!-- Delete modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M9 6V4h6v2"/>
+            </svg>
+            Delete Password
+        </h3>
+        <p>Deleting <strong id="deleteSiteName" style="color:#f1f5f9;"></strong>. Enter your master password to confirm.</p>
+        <div class="modal-input-wrap">
+            <input class="modal-input" type="password" id="modalMasterPassword" placeholder="Master password">
+            <button type="button" class="modal-eye" onclick="toggleModalEye()" id="modalEyeBtn">
+                <svg id="modal-eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg id="modal-eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+            </button>
+        </div>
+        <p class="modal-error" id="modalError"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel-modal" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn-confirm-delete" onclick="submitDelete()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function showToast(msg, isError) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.background = isError ? "rgba(60,15,15,0.98)" : "rgba(15,30,60,0.98)";
+    t.style.borderColor = isError ? "rgba(239,68,68,0.25)" : "rgba(56,189,248,0.25)";
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const toastMsg = urlParams.get('toast');
+if (toastMsg) { window.addEventListener('DOMContentLoaded', () => showToast(toastMsg)); window.history.replaceState({}, document.title, window.location.pathname); }
+
+// Session timer
+let remainingSeconds = {{ remaining_seconds }};
+let warningShown = false;
+const WARNING_THRESHOLD = 60;
+const timerEl   = document.getElementById("sessionTimer");
+const warnEl    = document.getElementById("warningOverlay");
+const warnCount = document.getElementById("warningCountdown");
+function formatTime(s) { return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; }
+function updateTimer() {
+    if (remainingSeconds <= 0) { timerEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Expired`; timerEl.className = "session-timer danger"; window.location.href = "/logout"; return; }
+    timerEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${formatTime(remainingSeconds)}`;
+    if (remainingSeconds <= WARNING_THRESHOLD) { timerEl.className = "session-timer danger"; if (!warningShown) { warningShown = true; warnEl.classList.add("active"); } warnCount.textContent = formatTime(remainingSeconds); }
+    else if (remainingSeconds <= 180) { timerEl.className = "session-timer warning"; }
+    else { timerEl.className = "session-timer"; }
+    remainingSeconds--;
+}
+updateTimer(); setInterval(updateTimer, 1000);
+function stayActive() { warnEl.classList.remove("active"); warningShown = false; fetch("/dashboard").then(() => window.location.reload()); }
+
+// Modal eye toggle
+function toggleModalEye() {
+    const el = document.getElementById("modalMasterPassword");
+    const isPassword = el.type === 'password';
+    el.type = isPassword ? 'text' : 'password';
+    document.getElementById("modal-eye-show").style.display = isPassword ? 'none' : '';
+    document.getElementById("modal-eye-hide").style.display = isPassword ? '' : 'none';
+}
+
+// Delete modal
+let currentDeleteId = null;
+function openDeleteModal(id, siteName) {
+    currentDeleteId = id;
+    document.getElementById("deleteSiteName").textContent = siteName;
+    document.getElementById("modalMasterPassword").value = "";
+    document.getElementById("modalMasterPassword").type = "password";
+    document.getElementById("modal-eye-show").style.display = '';
+    document.getElementById("modal-eye-hide").style.display = 'none';
+    document.getElementById("modalError").textContent = "";
+    document.getElementById("deleteModal").classList.add("active");
+    setTimeout(() => document.getElementById("modalMasterPassword").focus(), 100);
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); currentDeleteId = null; }
+document.getElementById("deleteModal").addEventListener("click", function(e) { if (e.target === this) closeDeleteModal(); });
+
+function submitDelete() {
+    const mp  = document.getElementById("modalMasterPassword").value;
+    const err = document.getElementById("modalError");
+    if (!mp) { err.textContent = "⚠ Please enter your master password."; return; }
+    const fd = new FormData(); fd.append("master_password", mp);
+    fetch(`/delete/${currentDeleteId}`, { method: "POST", body: fd })
+    .then(r => r.json()).then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            // ── Auto-refresh with toast after delete ──
+            window.location.href = `/dashboard?toast=${encodeURIComponent(data.msg)}`;
+        } else {
+            err.textContent = "❌ " + data.msg;
+        }
+    }).catch(() => { err.textContent = "Something went wrong. Try again."; });
+}
+
+function searchPassword() {
+    const q = document.getElementById("search").value.toLowerCase();
+    document.querySelectorAll(".card").forEach(card => {
+        const site = card.querySelector(".site").textContent.toLowerCase();
+        card.style.display = site.includes(q) ? "" : "none";
+    });
+}
+</script>
+</body>
+</html>
