@@ -29,6 +29,6 @@ OWASP ZAP automated scan results:
 
 ## Developer
 **Nur Irdina Syaqela Binti Mohd Shukri**
-Bachelor of IT (Hons) in Computer System Security — BCSS
+Bachelor of IT (Hons) in Computer System Security (BCSS)
 UniKL Malaysian Institute of Information Technology
 dinashukri9@gmail.com
