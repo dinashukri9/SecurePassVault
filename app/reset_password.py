@@ -268,14 +268,27 @@ def verify_biometric_2fa():
         flash('No authenticator app linked to this account.', 'auth_error')
         return redirect(url_for('reset_bp.account_locked'))
 
+    bio_tries = session.get('reset_bio_tries', 0)
+    if bio_tries >= MAX_TRIES:
+        user.is_reset_locked = True
+        db.session.commit()
+        return redirect(url_for('reset_bp.account_locked'))
+
     if request.method == 'POST':
         code = request.form.get('totp_code', '').strip()
         totp = pyotp.TOTP(user.totp_secret)
 
         if totp.verify(code, valid_window=1):
             session['biometric_2fa_verified'] = True
+            session.pop('reset_bio_tries', None)
             return redirect(url_for('reset_bp.reset_via_security_question'))
         else:
-            flash('Invalid code. Try again.', 'auth_error')
+            session['reset_bio_tries'] = bio_tries + 1
+            tries_left = MAX_TRIES - session['reset_bio_tries']
+            if tries_left <= 0:
+                user.is_reset_locked = True
+                db.session.commit()
+                return redirect(url_for('reset_bp.account_locked'))
+            flash(f'Invalid code. {tries_left} attempt(s) remaining.', 'auth_error')
 
     return render_template('verify_biometric_2fa.html')
